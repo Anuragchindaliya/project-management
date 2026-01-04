@@ -1,0 +1,79 @@
+version: "3.8"
+
+services:
+  # MySQL 8.0 Database
+  mysql:
+    image: mysql:8.0
+    container_name: pm_platform_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_change_me
+      MYSQL_DATABASE: project_management
+      MYSQL_USER: pm_user
+      MYSQL_PASSWORD: pm_password_change_me
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pm_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-proot_password_change_me",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer - Database Management UI
+  adminer:
+    image: adminer:latest
+    container_name: pm_platform_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+      ADMINER_DESIGN: nette
+    networks:
+      - pm_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Redis for Socket.io adapter (Optional but recommended for production)
+  redis:
+    image: redis:7-alpine
+    container_name: pm_platform_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pm_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  pm_network:
+    driver: bridge

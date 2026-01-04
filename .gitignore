@@ -1,0 +1,89 @@
+# ---------------------
+# Node / Server ignores
+# ---------------------
+node_modules/
+*/node_modules
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Drizzle migrations build
+/server/src/db/migrations/.snapshot
+
+# ---------------------
+# Vite / Client ignores
+# ---------------------
+client/node_modules/
+client/dist/
+client/.vite/
+client/.DS_Store
+
+# Local editor settings
+.vscode/
+.idea/
+
+# ---------------------
+# Docker
+# ---------------------
+docker-data/
+mysql_data/
+*.pid
+
+# Mac system files
+.DS_Store
+Thumbs.db
+
+# ---------------------
+# Logs
+# ---------------------
+logs/
+*.log
+logs/*.log
+
+# ---------------------
+# Others
+# ---------------------
+coverage/
+debug/
+temp/
+tmp/
+
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore secure and unwanted files
+*.env
+*.env.local
+*.env.development
+*.env.test
+*.env.production
+
+# Ignore IDE-specific files
+.idea/
+.vscode/
+
+# Ignore build output
+dist/
+
+# Ignore log files
+*.log
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore package manager files
+.pnp/
+yarn-error.log
+
+server/.env.example
+server/src/db/migrations
+client/src/env.d.ts
