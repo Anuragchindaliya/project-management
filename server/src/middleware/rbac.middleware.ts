@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from "express";
-import { RBACService } from "../services/rbac.service";
+import { Request, Response, NextFunction } from 'express';
+import { RBACService } from '../services/rbac.service';
 import {
   WorkspaceRole,
   ProjectRole,
   WorkspacePermissions,
   ProjectPermissions,
-} from "../types/rbac.types";
+} from '../types/rbac.types';
 
 const rbacService = new RBACService();
 
@@ -14,7 +14,7 @@ const rbacService = new RBACService();
 // ============================================
 
 export const requireWorkspaceAccess = (minRole: WorkspaceRole) => {
-  return async (req: Request<any>, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
       const workspaceId = req.params.workspaceId || req.body.workspaceId;
@@ -22,29 +22,28 @@ export const requireWorkspaceAccess = (minRole: WorkspaceRole) => {
       if (!workspaceId) {
         return res.status(400).json({
           success: false,
-          error: "Workspace ID is required",
+          error: 'Workspace ID is required',
         });
       }
 
-      const hasAccess = await rbacService.hasWorkspaceRole(
-        workspaceId,
-        userId,
-        minRole
-      );
+      const hasAccess = await rbacService.hasWorkspaceRole(workspaceId, userId, minRole);
 
       if (!hasAccess) {
         return res.status(403).json({
           success: false,
-          error: "Insufficient permissions",
+          error: 'Insufficient permissions',
           required: minRole,
         });
       }
 
       // Attach workspace role to request for future use
-      const userRole = await rbacService.getUserWorkspaceRole(
-        workspaceId,
-        userId
-      );
+      const userRole = await rbacService.getUserWorkspaceRole(workspaceId, userId);
+      if (!userRole) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a workspace member',
+        });
+      }
 
       req.user!.workspaceRole = userRole;
 
@@ -52,16 +51,14 @@ export const requireWorkspaceAccess = (minRole: WorkspaceRole) => {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Permission check failed",
+        error: 'Permission check failed',
       });
     }
   };
 };
 
-export const requireWorkspacePermission = (
-  permission: keyof WorkspacePermissions
-) => {
-  return async (req: Request<any>, res: Response, next: NextFunction) => {
+export const requireWorkspacePermission = (permission: keyof WorkspacePermissions) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
       const workspaceId = req.params.workspaceId || req.body.workspaceId;
@@ -69,19 +66,16 @@ export const requireWorkspacePermission = (
       if (!workspaceId) {
         return res.status(400).json({
           success: false,
-          error: "Workspace ID is required",
+          error: 'Workspace ID is required',
         });
       }
 
-      const userRole = await rbacService.getUserWorkspaceRole(
-        workspaceId,
-        userId
-      );
+      const userRole = await rbacService.getUserWorkspaceRole(workspaceId, userId);
 
       if (!userRole) {
         return res.status(403).json({
           success: false,
-          error: "Not a workspace member",
+          error: 'Not a workspace member',
         });
       }
 
@@ -99,7 +93,7 @@ export const requireWorkspacePermission = (
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Permission check failed",
+        error: 'Permission check failed',
       });
     }
   };
@@ -110,7 +104,7 @@ export const requireWorkspacePermission = (
 // ============================================
 
 export const requireProjectAccess = (minRole: ProjectRole) => {
-  return async (req: Request<any>, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
       const projectId = req.params.projectId || req.body.projectId;
@@ -118,7 +112,7 @@ export const requireProjectAccess = (minRole: ProjectRole) => {
       if (!projectId) {
         return res.status(400).json({
           success: false,
-          error: "Project ID is required",
+          error: 'Project ID is required',
         });
       }
 
@@ -128,42 +122,42 @@ export const requireProjectAccess = (minRole: ProjectRole) => {
       if (!canAccess) {
         return res.status(403).json({
           success: false,
-          error: "No access to this project",
+          error: 'No access to this project',
         });
       }
 
       // Check role level
-      const hasRole = await rbacService.hasProjectRole(
-        projectId,
-        userId,
-        minRole
-      );
+      const hasRole = await rbacService.hasProjectRole(projectId, userId, minRole);
 
       if (!hasRole) {
         return res.status(403).json({
           success: false,
-          error: "Insufficient project permissions",
+          error: 'Insufficient project permissions',
           required: minRole,
         });
       }
 
       // Attach project role to request
       const userRole = await rbacService.getUserProjectRole(projectId, userId);
+      if (!userRole) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a project member',
+        });
+      }
       req.user!.projectRole = userRole; // Assign project role to user
 
       next();
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Permission check failed",
+        error: 'Permission check failed',
       });
     }
   };
 };
 
-export const requireProjectPermission = (
-  permission: keyof ProjectPermissions
-) => {
+export const requireProjectPermission = (permission: keyof ProjectPermissions) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
@@ -172,15 +166,11 @@ export const requireProjectPermission = (
       if (!projectId) {
         return res.status(400).json({
           success: false,
-          error: "Project ID is required",
+          error: 'Project ID is required',
         });
       }
 
-      const canPerform = await rbacService.canPerformProjectAction(
-        projectId,
-        userId,
-        permission
-      );
+      const canPerform = await rbacService.canPerformProjectAction(projectId, userId, permission);
 
       if (!canPerform) {
         return res.status(403).json({
@@ -193,7 +183,7 @@ export const requireProjectPermission = (
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Permission check failed",
+        error: 'Permission check failed',
       });
     }
   };

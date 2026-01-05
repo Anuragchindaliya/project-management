@@ -1,47 +1,45 @@
-import { relations } from "drizzle-orm";
+import { relations } from 'drizzle-orm';
 import {
-  mysqlTable,
-  varchar,
-  timestamp,
-  text,
-  mysqlEnum,
-  int,
   index,
+  int,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
   uniqueIndex,
-  primaryKey,
-} from "drizzle-orm/mysql-core";
+  varchar,
+} from 'drizzle-orm/mysql-core';
 
-interface Task {
+export interface Task {
   id: number;
   name: string;
   completed: boolean;
+  projectId: string;
 }
 
 // ============================================
 // USERS TABLE
 // ============================================
 export const users = mysqlTable(
-  "users",
+  'users',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    email: varchar("email", { length: 255 }).notNull().unique(),
-    username: varchar("username", { length: 50 }).notNull().unique(),
-    passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-    firstName: varchar("first_name", { length: 100 }),
-    lastName: varchar("last_name", { length: 100 }),
-    avatarUrl: text("avatar_url"),
-    isActive: mysqlEnum("is_active", ["active", "inactive"])
-      .default("active")
-      .notNull(),
-    lastLoginAt: timestamp("last_login_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    username: varchar('username', { length: 50 }).notNull().unique(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    firstName: varchar('first_name', { length: 100 }),
+    lastName: varchar('last_name', { length: 100 }),
+    avatarUrl: text('avatar_url'),
+    isActive: mysqlEnum('is_active', ['active', 'inactive']).default('active').notNull(),
+    lastLoginAt: timestamp('last_login_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({
-    emailIdx: index("email_idx").on(table.email),
-    usernameIdx: index("username_idx").on(table.username),
+    emailIdx: index('email_idx').on(table.email),
+    usernameIdx: index('username_idx').on(table.username),
   })
 );
 
@@ -49,27 +47,25 @@ export const users = mysqlTable(
 // WORKSPACES TABLE
 // ============================================
 export const workspaces = mysqlTable(
-  "workspaces",
+  'workspaces',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    name: varchar("name", { length: 100 }).notNull(),
-    slug: varchar("slug", { length: 100 }).notNull().unique(),
-    description: text("description"),
-    ownerId: varchar("owner_id", { length: 36 })
+    name: varchar('name', { length: 100 }).notNull(),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+    description: text('description'),
+    ownerId: varchar('owner_id', { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    avatarUrl: text("avatar_url"),
-    isActive: mysqlEnum("is_active", ["active", "archived"])
-      .default("active")
-      .notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+      .references(() => users.id, { onDelete: 'cascade' }),
+    avatarUrl: text('avatar_url'),
+    isActive: mysqlEnum('is_active', ['active', 'archived']).default('active').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({
-    slugIdx: uniqueIndex("slug_idx").on(table.slug),
-    ownerIdx: index("owner_idx").on(table.ownerId),
+    slugIdx: uniqueIndex('slug_idx').on(table.slug),
+    ownerIdx: index('owner_idx').on(table.ownerId),
   })
 );
 
@@ -77,27 +73,24 @@ export const workspaces = mysqlTable(
 // WORKSPACE MEMBERS (RBAC)
 // ============================================
 export const workspaceMembers = mysqlTable(
-  "workspace_members",
+  'workspace_members',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    workspaceId: varchar("workspace_id", { length: 36 })
+    workspaceId: varchar('workspace_id', { length: 36 })
       .notNull()
-      .references(() => workspaces.id, { onDelete: "cascade" }),
-    userId: varchar("user_id", { length: 36 })
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: mysqlEnum("role", ["owner", "admin", "member", "viewer"]).notNull(),
-    invitedBy: varchar("invited_by", { length: 36 }).references(() => users.id),
-    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: mysqlEnum('role', ['owner', 'admin', 'member', 'viewer']).notNull(),
+    invitedBy: varchar('invited_by', { length: 36 }).references(() => users.id),
+    joinedAt: timestamp('joined_at').defaultNow().notNull(),
   },
   (table) => ({
-    workspaceUserIdx: uniqueIndex("workspace_user_idx").on(
-      table.workspaceId,
-      table.userId
-    ),
-    userIdx: index("user_idx").on(table.userId),
+    workspaceUserIdx: uniqueIndex('workspace_user_idx').on(table.workspaceId, table.userId),
+    userIdx: index('user_idx').on(table.userId),
   })
 );
 
@@ -105,35 +98,30 @@ export const workspaceMembers = mysqlTable(
 // PROJECTS TABLE
 // ============================================
 export const projects = mysqlTable(
-  "projects",
+  'projects',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    workspaceId: varchar("workspace_id", { length: 36 })
+    workspaceId: varchar('workspace_id', { length: 36 })
       .notNull()
-      .references(() => workspaces.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 100 }).notNull(),
-    key: varchar("key", { length: 10 }).notNull(), // e.g., "PROJ" for PROJ-123
-    description: text("description"),
-    ownerId: varchar("owner_id", { length: 36 })
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    key: varchar('key', { length: 10 }).notNull(), // e.g., "PROJ" for PROJ-123
+    description: text('description'),
+    ownerId: varchar('owner_id', { length: 36 })
       .notNull()
       .references(() => users.id),
-    status: mysqlEnum("status", ["active", "archived", "completed"])
-      .default("active")
-      .notNull(),
-    startDate: timestamp("start_date"),
-    endDate: timestamp("end_date"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    status: mysqlEnum('status', ['active', 'archived', 'completed']).default('active').notNull(),
+    startDate: timestamp('start_date'),
+    endDate: timestamp('end_date'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({
-    workspaceKeyIdx: uniqueIndex("workspace_key_idx").on(
-      table.workspaceId,
-      table.key
-    ),
-    workspaceIdx: index("workspace_idx").on(table.workspaceId),
-    ownerIdx: index("owner_idx").on(table.ownerId),
+    workspaceKeyIdx: uniqueIndex('workspace_key_idx').on(table.workspaceId, table.key),
+    workspaceIdx: index('workspace_idx').on(table.workspaceId),
+    ownerIdx: index('owner_idx').on(table.ownerId),
   })
 );
 
@@ -141,26 +129,23 @@ export const projects = mysqlTable(
 // PROJECT MEMBERS (RBAC at Project Level)
 // ============================================
 export const projectMembers = mysqlTable(
-  "project_members",
+  'project_members',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    projectId: varchar("project_id", { length: 36 })
+    projectId: varchar('project_id', { length: 36 })
       .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    userId: varchar("user_id", { length: 36 })
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: mysqlEnum("role", ["lead", "developer", "viewer"]).notNull(),
-    addedAt: timestamp("added_at").defaultNow().notNull(),
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: mysqlEnum('role', ['lead', 'developer', 'viewer']).notNull(),
+    addedAt: timestamp('added_at').defaultNow().notNull(),
   },
   (table) => ({
-    projectUserIdx: uniqueIndex("project_user_idx").on(
-      table.projectId,
-      table.userId
-    ),
-    userIdx: index("user_idx").on(table.userId),
+    projectUserIdx: uniqueIndex('project_user_idx').on(table.projectId, table.userId),
+    userIdx: index('user_idx').on(table.userId),
   })
 );
 
@@ -168,60 +153,45 @@ export const projectMembers = mysqlTable(
 // TASKS TABLE
 // ============================================
 export const tasks: any = mysqlTable(
-  "tasks",
+  'tasks',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    projectId: varchar("project_id", { length: 36 })
+    projectId: varchar('project_id', { length: 36 })
       .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    title: varchar("title", { length: 255 }).notNull(),
-    description: text("description"),
-    taskNumber: int("task_number").notNull(), // Auto-incremented per project
-    status: mysqlEnum("status", [
-      "todo",
-      "in_progress",
-      "in_review",
-      "done",
-      "blocked",
-    ])
-      .default("todo")
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description'),
+    taskNumber: int('task_number').notNull(), // Auto-incremented per project
+    status: mysqlEnum('status', ['todo', 'in_progress', 'in_review', 'done', 'blocked'])
+      .default('todo')
       .notNull(),
-    priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"])
-      .default("medium")
+    priority: mysqlEnum('priority', ['low', 'medium', 'high', 'urgent'])
+      .default('medium')
       .notNull(),
-    assigneeId: varchar("assignee_id", { length: 36 }).references(
-      () => users.id,
-      {
-        onDelete: "set null",
-      }
-    ),
-    reporterId: varchar("reporter_id", { length: 36 })
+    assigneeId: varchar('assignee_id', { length: 36 }).references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    reporterId: varchar('reporter_id', { length: 36 })
       .notNull()
       .references(() => users.id),
-    parentTaskId: varchar("parent_task_id", { length: 36 }).references(
-      () => tasks.id,
-      {
-        onDelete: "set null",
-      }
-    ), // For subtasks
-    estimatedHours: int("estimated_hours"),
-    actualHours: int("actual_hours"),
-    dueDate: timestamp("due_date"),
-    completedAt: timestamp("completed_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    parentTaskId: varchar('parent_task_id', { length: 36 }).references(() => tasks.id, {
+      onDelete: 'set null',
+    }), // For subtasks
+    estimatedHours: int('estimated_hours'),
+    actualHours: int('actual_hours'),
+    dueDate: timestamp('due_date'),
+    completedAt: timestamp('completed_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({
-    projectNumberIdx: uniqueIndex("project_number_idx").on(
-      table.projectId,
-      table.taskNumber
-    ),
-    projectIdx: index("project_idx").on(table.projectId),
-    assigneeIdx: index("assignee_idx").on(table.assigneeId),
-    statusIdx: index("status_idx").on(table.status),
-    parentTaskIdx: index("parent_task_idx").on(table.parentTaskId),
+    projectNumberIdx: uniqueIndex('project_number_idx').on(table.projectId, table.taskNumber),
+    projectIdx: index('project_idx').on(table.projectId),
+    assigneeIdx: index('assignee_idx').on(table.assigneeId),
+    statusIdx: index('status_idx').on(table.status),
+    parentTaskIdx: index('parent_task_idx').on(table.parentTaskId),
   })
 );
 
@@ -229,24 +199,24 @@ export const tasks: any = mysqlTable(
 // TASK COMMENTS
 // ============================================
 export const taskComments = mysqlTable(
-  "task_comments",
+  'task_comments',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    taskId: varchar("task_id", { length: 36 })
+    taskId: varchar('task_id', { length: 36 })
       .notNull()
-      .references(() => tasks.id, { onDelete: "cascade" }),
-    userId: varchar("user_id", { length: 36 })
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    content: text("content").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+      .references(() => users.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({
-    taskIdx: index("task_idx").on(table.taskId),
-    userIdx: index("user_idx").on(table.userId),
+    taskIdx: index('task_idx').on(table.taskId),
+    userIdx: index('user_idx').on(table.userId),
   })
 );
 
@@ -254,25 +224,25 @@ export const taskComments = mysqlTable(
 // TASK ATTACHMENTS
 // ============================================
 export const taskAttachments = mysqlTable(
-  "task_attachments",
+  'task_attachments',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    taskId: varchar("task_id", { length: 36 })
+    taskId: varchar('task_id', { length: 36 })
       .notNull()
-      .references(() => tasks.id, { onDelete: "cascade" }),
-    uploadedBy: varchar("uploaded_by", { length: 36 })
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    uploadedBy: varchar('uploaded_by', { length: 36 })
       .notNull()
       .references(() => users.id),
-    fileName: varchar("file_name", { length: 255 }).notNull(),
-    fileUrl: text("file_url").notNull(),
-    fileSize: int("file_size"), // in bytes
-    mimeType: varchar("mime_type", { length: 100 }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    fileUrl: text('file_url').notNull(),
+    fileSize: int('file_size'), // in bytes
+    mimeType: varchar('mime_type', { length: 100 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
-    taskIdx: index("task_idx").on(table.taskId),
+    taskIdx: index('task_idx').on(table.taskId),
   })
 );
 
@@ -280,45 +250,34 @@ export const taskAttachments = mysqlTable(
 // ACTIVITY LOGS (Audit Trail)
 // ============================================
 export const activityLogs = mysqlTable(
-  "activity_logs",
+  'activity_logs',
   {
-    id: varchar("id", { length: 36 })
+    id: varchar('id', { length: 36 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    workspaceId: varchar("workspace_id", { length: 36 }).references(
-      () => workspaces.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    projectId: varchar("project_id", { length: 36 }).references(
-      () => projects.id,
-      {
-        onDelete: "cascade",
-      }
-    ),
-    taskId: varchar("task_id", { length: 36 }).references(() => tasks.id, {
-      onDelete: "cascade",
+    workspaceId: varchar('workspace_id', { length: 36 }).references(() => workspaces.id, {
+      onDelete: 'cascade',
     }),
-    userId: varchar("user_id", { length: 36 })
+    projectId: varchar('project_id', { length: 36 }).references(() => projects.id, {
+      onDelete: 'cascade',
+    }),
+    taskId: varchar('task_id', { length: 36 }).references(() => tasks.id, {
+      onDelete: 'cascade',
+    }),
+    userId: varchar('user_id', { length: 36 })
       .notNull()
       .references(() => users.id),
-    action: varchar("action", { length: 50 }).notNull(), // e.g., "task_created", "task_updated"
-    entityType: mysqlEnum("entity_type", [
-      "workspace",
-      "project",
-      "task",
-      "comment",
-    ]).notNull(),
-    metadata: text("metadata"), // JSON string for additional data
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    action: varchar('action', { length: 50 }).notNull(), // e.g., "task_created", "task_updated"
+    entityType: mysqlEnum('entity_type', ['workspace', 'project', 'task', 'comment']).notNull(),
+    metadata: text('metadata'), // JSON string for additional data
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
-    workspaceIdx: index("workspace_idx").on(table.workspaceId),
-    projectIdx: index("project_idx").on(table.projectId),
-    taskIdx: index("task_idx").on(table.taskId),
-    userIdx: index("user_idx").on(table.userId),
-    createdAtIdx: index("created_at_idx").on(table.createdAt),
+    workspaceIdx: index('workspace_idx').on(table.workspaceId),
+    projectIdx: index('project_idx').on(table.projectId),
+    taskIdx: index('task_idx').on(table.taskId),
+    userIdx: index('user_idx').on(table.userId),
+    createdAtIdx: index('created_at_idx').on(table.createdAt),
   })
 );
 
@@ -331,8 +290,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   workspaceMemberships: many(workspaceMembers),
   ownedProjects: many(projects),
   projectMemberships: many(projectMembers),
-  assignedTasks: many(tasks, { relationName: "assignee" }),
-  reportedTasks: many(tasks, { relationName: "reporter" }),
+  assignedTasks: many(tasks, { relationName: 'assignee' }),
+  reportedTasks: many(tasks, { relationName: 'reporter' }),
   comments: many(taskComments),
   activityLogs: many(activityLogs),
 }));
@@ -347,19 +306,16 @@ export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
   activityLogs: many(activityLogs),
 }));
 
-export const workspaceMembersRelations = relations(
-  workspaceMembers,
-  ({ one }) => ({
-    workspace: one(workspaces, {
-      fields: [workspaceMembers.workspaceId],
-      references: [workspaces.id],
-    }),
-    user: one(users, {
-      fields: [workspaceMembers.userId],
-      references: [users.id],
-    }),
-  })
-);
+export const workspaceMembersRelations = relations(workspaceMembers, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [workspaceMembers.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [workspaceMembers.userId],
+    references: [users.id],
+  }),
+}));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   workspace: one(workspaces, {
@@ -394,19 +350,19 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   assignee: one(users, {
     fields: [tasks.assigneeId],
     references: [users.id],
-    relationName: "assignee",
+    relationName: 'assignee',
   }),
   reporter: one(users, {
     fields: [tasks.reporterId],
     references: [users.id],
-    relationName: "reporter",
+    relationName: 'reporter',
   }),
   parentTask: one(tasks, {
     fields: [tasks.parentTaskId],
     references: [tasks.id],
-    relationName: "subtasks",
+    relationName: 'subtasks',
   }),
-  subtasks: many(tasks, { relationName: "subtasks" }),
+  subtasks: many(tasks, { relationName: 'subtasks' }),
   comments: many(taskComments),
   attachments: many(taskAttachments),
   activityLogs: many(activityLogs),
@@ -423,19 +379,16 @@ export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
   }),
 }));
 
-export const taskAttachmentsRelations = relations(
-  taskAttachments,
-  ({ one }) => ({
-    task: one(tasks, {
-      fields: [taskAttachments.taskId],
-      references: [tasks.id],
-    }),
-    uploader: one(users, {
-      fields: [taskAttachments.uploadedBy],
-      references: [users.id],
-    }),
-  })
-);
+export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskAttachments.taskId],
+    references: [tasks.id],
+  }),
+  uploader: one(users, {
+    fields: [taskAttachments.uploadedBy],
+    references: [users.id],
+  }),
+}));
 
 export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   workspace: one(workspaces, {

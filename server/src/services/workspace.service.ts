@@ -300,4 +300,27 @@ export class WorkspaceService {
 
     return members;
   }
+  async deleteWorkspace(workspaceId: string, userId: string) {
+    return await db.transaction(async (tx) => {
+      // Get workspace
+      const [workspace] = await tx
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, workspaceId));
+
+      if (!workspace) {
+        throw new Error("Workspace not found");
+      }
+
+      // Only owner can delete workspace
+      if (workspace.ownerId !== userId) {
+        throw new Error("Only workspace owner can delete the workspace");
+      }
+
+      // Delete workspace (projects, tasks, etc. will cascade)
+      await tx.delete(workspaces).where(eq(workspaces.id, workspaceId));
+
+      return { success: true, workspaceId };
+    });
+  }
 }

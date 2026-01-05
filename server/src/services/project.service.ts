@@ -259,4 +259,78 @@ export class ProjectService {
 
     return members;
   }
+
+  async updateProjectMemberRole(
+    projectId: string,
+    targetUserId: string,
+    newRole: "lead" | "developer" | "viewer",
+    updaterId: string
+  ) {
+    return await db.transaction(async (tx) => {
+      // Check if updater has permission
+      const canEdit = await rbacService.canPerformProjectAction(
+        projectId,
+        updaterId,
+        "canEditProject"
+      );
+
+      if (!canEdit) {
+        throw new Error("Insufficient permissions to update member roles");
+      }
+
+      // Update role
+      await tx
+        .update(projectMembers)
+        .set({ role: newRole })
+        .where(
+          and(
+            eq(projectMembers.projectId, projectId),
+            eq(projectMembers.userId, targetUserId)
+          )
+        );
+
+      return { success: true };
+    });
+  }
+
+  async removeProjectMember(
+    projectId: string,
+    targetUserId: string,
+    removerId: string
+  ) {
+    return await db.transaction(async (tx) => {
+      // Check permissions
+      const canEdit = await rbacService.canPerformProjectAction(
+        projectId,
+        removerId,
+        "canEditProject"
+      );
+
+      if (!canEdit) {
+        throw new Error("Insufficient permissions to remove project members");
+      }
+
+      // Cannot remove project owner
+      const [project] = await tx
+        .select()
+        .from(projects)
+        .where(eq(projects.id, projectId));
+
+      if (project.ownerId === targetUserId) {
+        throw new Error("Cannot remove project owner");
+      }
+
+      // Remove from project
+      await tx
+        .delete(projectMembers)
+        .where(
+          and(
+            eq(projectMembers.projectId, projectId),
+            eq(projectMembers.userId, targetUserId)
+          )
+        );
+
+      return { success: true };
+    });
+  }
 }

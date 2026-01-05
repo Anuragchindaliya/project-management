@@ -1,25 +1,8 @@
-import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "../utils/jwt.util";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from 'express';
+import { verifyAccessToken } from '../utils/jwt.util';
+import jwt from 'jsonwebtoken';
 
-// Extend Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        username: string;
-      };
-    }
-  }
-}
-
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Get token from HttpOnly cookie
     const accessToken = req.cookies.accessToken;
@@ -27,7 +10,7 @@ export const authenticate = async (
     if (!accessToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        error: 'Authentication required',
       });
     }
 
@@ -35,6 +18,7 @@ export const authenticate = async (
     const payload = verifyAccessToken(accessToken);
 
     // Attach user to request
+    // @ts-ignore
     req.user = {
       userId: payload.userId,
       email: payload.email,
@@ -46,14 +30,14 @@ export const authenticate = async (
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         success: false,
-        error: "Token expired",
-        code: "TOKEN_EXPIRED",
+        error: 'Token expired',
+        code: 'TOKEN_EXPIRED',
       });
     }
 
     return res.status(401).json({
       success: false,
-      error: "Invalid token",
+      error: 'Invalid token',
     });
   }
 };

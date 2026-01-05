@@ -14,6 +14,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: UserPayload;
+      params: any; // FIXES params missing issue
+      body: any; // FIXES ReadableStream issue
     }
   }
 }

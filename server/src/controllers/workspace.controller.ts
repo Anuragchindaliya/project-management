@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { WorkspaceService } from "../services/workspace.service";
+import { Request, Response } from 'express';
+import { WorkspaceService } from '../services/workspace.service';
 
 const workspaceService = new WorkspaceService();
 
@@ -7,10 +7,7 @@ export class WorkspaceController {
   async createWorkspace(req: Request, res: Response) {
     try {
       const userId = req.user!.userId;
-      const workspace = await workspaceService.createWorkspace(
-        req.body,
-        userId
-      );
+      const workspace = await workspaceService.createWorkspace(req.body, userId);
 
       return res.status(201).json({
         success: true,
@@ -19,8 +16,7 @@ export class WorkspaceController {
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to create workspace",
+        error: error instanceof Error ? error.message : 'Failed to create workspace',
       });
     }
   }
@@ -37,7 +33,7 @@ export class WorkspaceController {
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error: "Failed to fetch workspaces",
+        error: 'Failed to fetch workspaces',
       });
     }
   }
@@ -47,10 +43,7 @@ export class WorkspaceController {
       const { workspaceId } = req.params;
       const userId = req.user!.userId;
 
-      const workspace = await workspaceService.getWorkspaceById(
-        workspaceId,
-        userId
-      );
+      const workspace = await workspaceService.getWorkspaceById(workspaceId, userId);
 
       return res.json({
         success: true,
@@ -59,7 +52,7 @@ export class WorkspaceController {
     } catch (error) {
       return res.status(404).json({
         success: false,
-        error: error instanceof Error ? error.message : "Workspace not found",
+        error: error instanceof Error ? error.message : 'Workspace not found',
       });
     }
   }
@@ -69,11 +62,7 @@ export class WorkspaceController {
       const { workspaceId } = req.params;
       const userId = req.user!.userId;
 
-      const workspace = await workspaceService.updateWorkspace(
-        workspaceId,
-        req.body,
-        userId
-      );
+      const workspace = await workspaceService.updateWorkspace(workspaceId, req.body, userId);
 
       return res.json({
         success: true,
@@ -82,8 +71,26 @@ export class WorkspaceController {
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to update workspace",
+        error: error instanceof Error ? error.message : 'Failed to update workspace',
+      });
+    }
+  }
+
+  async deleteWorkspace(req: Request, res: Response) {
+    try {
+      const { workspaceId } = req.params;
+      const userId = req.user!.userId;
+
+      await workspaceService.deleteWorkspace(workspaceId, userId);
+
+      return res.json({
+        success: true,
+        message: 'Workspace deleted successfully',
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete workspace',
       });
     }
   }
@@ -94,21 +101,16 @@ export class WorkspaceController {
       const { userId: targetUserId, role } = req.body;
       const inviterId = req.user!.userId;
 
-      await workspaceService.addWorkspaceMember(
-        workspaceId,
-        targetUserId,
-        role,
-        inviterId
-      );
+      await workspaceService.addWorkspaceMember(workspaceId, targetUserId, role, inviterId);
 
       return res.status(201).json({
         success: true,
-        message: "Member added successfully",
+        message: 'Member added successfully',
       });
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error: error instanceof Error ? error.message : "Failed to add member",
+        error: error instanceof Error ? error.message : 'Failed to add member',
       });
     }
   }
@@ -119,21 +121,16 @@ export class WorkspaceController {
       const { role } = req.body;
       const updaterId = req.user!.userId;
 
-      await workspaceService.updateMemberRole(
-        workspaceId,
-        targetUserId,
-        role,
-        updaterId
-      );
+      await workspaceService.updateMemberRole(workspaceId, targetUserId, role, updaterId);
 
       return res.json({
         success: true,
-        message: "Member role updated",
+        message: 'Member role updated',
       });
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update role",
+        error: error instanceof Error ? error.message : 'Failed to update role',
       });
     }
   }
@@ -147,13 +144,12 @@ export class WorkspaceController {
 
       return res.json({
         success: true,
-        message: "Member removed",
+        message: 'Member removed',
       });
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to remove member",
+        error: error instanceof Error ? error.message : 'Failed to remove member',
       });
     }
   }
@@ -163,10 +159,7 @@ export class WorkspaceController {
       const { workspaceId } = req.params;
       const userId = req.user!.userId;
 
-      const members = await workspaceService.getWorkspaceMembers(
-        workspaceId,
-        userId
-      );
+      const members = await workspaceService.getWorkspaceMembers(workspaceId, userId);
 
       return res.json({
         success: true,
@@ -175,7 +168,7 @@ export class WorkspaceController {
     } catch (error) {
       return res.status(400).json({
         success: false,
-        error: "Failed to fetch members",
+        error: 'Failed to fetch members',
       });
     }
   }

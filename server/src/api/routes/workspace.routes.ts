@@ -1,16 +1,19 @@
-import { Router } from "express";
-import { authenticate } from "../../middleware/auth.middleware";
+import { Router } from 'express';
+import { authenticate } from '../../middleware/auth.middleware';
 import {
   requireWorkspaceAccess,
   requireWorkspacePermission,
-} from "../../middleware/rbac.middleware";
-import { validateRequest } from "../../middleware/validate.middleware";
-import { WorkspaceController } from "controllers/workspace.controller";
+} from '../../middleware/rbac.middleware';
+import { validateRequest } from '../../middleware/validate.middleware';
 import {
-  addWorkspaceMemberSchema,
   createWorkspaceSchema,
   updateWorkspaceSchema,
-} from "validators/workspace.validator";
+  addWorkspaceMemberSchema,
+  updateWorkspaceMemberRoleSchema,
+  removeWorkspaceMemberSchema,
+  getWorkspaceSchema,
+} from '../../validators/workspace.validator';
+import { WorkspaceController } from '../../controllers/workspace.controller';
 
 const router = Router();
 const workspaceController = new WorkspaceController();
@@ -18,46 +21,56 @@ const workspaceController = new WorkspaceController();
 // All routes require authentication
 router.use(authenticate);
 
-// Create workspace
-router.post(
-  "/",
-  validateRequest(createWorkspaceSchema),
-  workspaceController.createWorkspace
+// Workspace CRUD
+router.post('/', validateRequest(createWorkspaceSchema), workspaceController.createWorkspace);
+
+router.get('/', workspaceController.getUserWorkspaces);
+
+router.get(
+  '/:workspaceId',
+  validateRequest(getWorkspaceSchema),
+  workspaceController.getWorkspaceById
 );
 
-// Get user's workspaces
-router.get("/", workspaceController.getUserWorkspaces);
-
-// Get workspace by ID
-router.get("/:workspaceId", workspaceController.getWorkspaceById);
-
-// Update workspace
 router.patch(
-  "/:workspaceId",
-  requireWorkspaceAccess("admin" as any),
+  '/:workspaceId',
+  requireWorkspaceAccess('admin' as any),
   validateRequest(updateWorkspaceSchema),
   workspaceController.updateWorkspace
 );
 
-// Member management
+router.delete(
+  '/:workspaceId',
+  requireWorkspaceAccess('owner' as any),
+  validateRequest(getWorkspaceSchema),
+  workspaceController.deleteWorkspace
+);
+
+// Workspace Members Management
+router.get(
+  '/:workspaceId/members',
+  validateRequest(getWorkspaceSchema),
+  workspaceController.getMembers
+);
+
 router.post(
-  "/:workspaceId/members",
-  requireWorkspacePermission("canManageMembers"),
+  '/:workspaceId/members',
+  requireWorkspacePermission('canManageMembers'),
   validateRequest(addWorkspaceMemberSchema),
   workspaceController.addMember
 );
 
-router.get("/:workspaceId/members", workspaceController.getMembers);
-
 router.patch(
-  "/:workspaceId/members/:userId",
-  requireWorkspacePermission("canManageMembers"),
+  '/:workspaceId/members/:userId',
+  requireWorkspacePermission('canManageMembers'),
+  validateRequest(updateWorkspaceMemberRoleSchema),
   workspaceController.updateMemberRole
 );
 
 router.delete(
-  "/:workspaceId/members/:userId",
-  requireWorkspacePermission("canManageMembers"),
+  '/:workspaceId/members/:userId',
+  requireWorkspacePermission('canManageMembers'),
+  validateRequest(removeWorkspaceMemberSchema),
   workspaceController.removeMember
 );
 
