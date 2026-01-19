@@ -15,6 +15,10 @@ const authController = new AuthController();
 // Public routes
 router.post('/register', validateRequest(registerSchema), authController.register);
 router.post('/login', validateRequest(loginSchema), authController.login);
+// router.post('/logins', (req, res) => {
+//   console.log('logins route called');
+//   return res.send({ success: true, message: 'Logins route' });
+// });
 router.post('/refresh', authController.refresh);
 router.post('/logout', authController.logout);
 
