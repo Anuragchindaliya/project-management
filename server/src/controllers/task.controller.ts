@@ -89,6 +89,12 @@ export class TaskController {
 
       const task = await taskService.updateTask(taskId, req.body, userId);
 
+      // Socket.io Emission
+      const io = req.app.get('io');
+      if (io) {
+          io.to(`project:${task.projectId}`).emit('task:updated', task);
+      }
+
       return res.json({
         success: true,
         data: { task },
@@ -133,6 +139,14 @@ export class TaskController {
       const { updates } = req.body;
 
       const tasks = await taskService.bulkUpdateTaskStatus(updates, userId);
+
+      const io = req.app.get('io');
+      if (io && tasks.length > 0) {
+          // Emit for the project of the first task (assuming bulk is within same project usually)
+          // Ideally we group by project, but for Kanban it's one project.
+          const projectId = tasks[0].projectId;
+          io.to(`project:${projectId}`).emit('tasks:bulk_updated', tasks);
+      }
 
       return res.json({
         success: true,

@@ -6,7 +6,8 @@ import {
   ListTodo, 
   LogOut, 
   Menu,
-  Briefcase
+  Briefcase,
+  Plus
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ModeToggle } from '@/features/theme/ThemeToggle';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { cn } from '@/lib/utils';
+// Hook imported later in file, cleaner to move here but let's just remove unused.
+import { CreateWorkspaceDialog } from '@/features/create/CreateWorkspaceDialog';
 
 interface NavItemProps {
   to: string;
@@ -42,10 +45,14 @@ function NavItem({ to, icon: Icon, label, onClick }: NavItemProps) {
   );
 }
 
+import { useUserWorkspaces } from '@/entities/workspace/api/useWorkspaces';
+
 export function DashboardLayout() {
   const { logout, user } = useAuth();
-  // const navigate = useNavigate(); -> Removed in previous step but commented out. cleaning up.
   const [isOpen, setIsOpen] = useState(false);
+  
+  const { data: workspaces = [], isLoading: isLoadingWorkspaces } = useUserWorkspaces();
+  console.log({workspaces})
 
   // Sidebar content
   const SidebarContent = () => (
@@ -63,11 +70,38 @@ export function DashboardLayout() {
         <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
           <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsOpen(false)} />
           <div className="my-2 border-t" />
-          <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
-            Workspaces
+          <div className="px-3 py-2 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+            <span>WORKSPACES</span>
+            <CreateWorkspaceDialog>
+                <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted">
+                    <Plus className="h-3 w-3" />
+                </Button>
+            </CreateWorkspaceDialog>
           </div>
-          {/* We would map workspaces here. For now static or placeholder */}
-          <NavItem to="/workspaces" icon={Briefcase} label="All Workspaces" onClick={() => setIsOpen(false)} />
+          
+          {isLoadingWorkspaces ? (
+             <div className="px-3 py-2 space-y-2">
+                 <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                 <div className="h-4 w-1/2 bg-muted animate-pulse rounded" />
+             </div>
+          ) : (
+              <div className="space-y-1">
+                {workspaces.map(ws => (
+                    <NavItem 
+                        key={ws.workspace.id} 
+                        to={`/workspaces/${ws.workspace.id}`} 
+                        icon={Briefcase} 
+                        label={ws.workspace.name} 
+                        onClick={() => setIsOpen(false)} 
+                    />
+                ))}
+                {workspaces.length === 0 && (
+                     <div className="px-3 py-2 text-xs text-muted-foreground italic">
+                         No workspaces yet
+                     </div>
+                )}
+              </div>
+          )}
           
           <div className="my-2 border-t" />
           <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
@@ -125,7 +159,7 @@ export function DashboardLayout() {
           </div>
           <ModeToggle />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto">
+        <main className="flex-1 overflow-auto p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

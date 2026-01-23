@@ -26,9 +26,11 @@ const workspaceSchema = z.object({
 
 type WorkspaceFormValues = z.infer<typeof workspaceSchema>;
 
+import { useCreateWorkspace } from '@/entities/workspace/api/useWorkspaces';
+
 export function CreateWorkspaceDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: createWorkspace, isPending } = useCreateWorkspace();
 
   const {
     register,
@@ -39,23 +41,17 @@ export function CreateWorkspaceDialog({ children }: { children: React.ReactNode 
     resolver: zodResolver(workspaceSchema),
   });
 
-  const onSubmit = async (data: WorkspaceFormValues) => {
-    setIsLoading(true);
-    try {
-      // API call to create workspace would go here
-      // await workspaceApi.create(data);
-      console.log('Creating workspace', data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
-      
-      toast.success('Workspace created successfully');
-      setOpen(false);
-      reset();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to create workspace');
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (data: WorkspaceFormValues) => {
+    createWorkspace(data, {
+        onSuccess: () => {
+            toast.success('Workspace created successfully');
+            setOpen(false);
+            reset();
+        },
+        onError: () => {
+            toast.error('Failed to create workspace');
+        }
+    });
   };
 
   return (
@@ -102,8 +98,8 @@ export function CreateWorkspaceDialog({ children }: { children: React.ReactNode 
             />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Workspace
             </Button>
           </DialogFooter>

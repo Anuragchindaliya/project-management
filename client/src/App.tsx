@@ -4,9 +4,12 @@ import { AuthProvider, useAuth } from './app/providers/AuthProvider';
 import { ThemeProvider } from './features/theme/ThemeProvider';
 import { useSocket } from './shared/hooks/useSocket';
 import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { DashboardLayout } from './_layouts/DashboardLayout';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
+import { WorkspaceProjectsPage } from './pages/workspaces/WorkspaceProjectsPage';
+import { LandingPage } from './pages/landing/LandingPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -22,12 +25,29 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PublicRoute({ children }: { children: React.ReactNode }) {
+    const { user, isLoading } = useAuth();
+
+    if (isLoading) {
+         return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    }
+
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <>{children}</>;
+}
+
 function AppContent() {
   useSocket();
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      
       <Route 
         element={
             <ProtectedRoute>
@@ -36,17 +56,19 @@ function AppContent() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
-        {/* Redirect root to dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
-        {/* Placeholders and new routes */}
-        <Route path="/workspaces" element={<div className="p-4">Workspaces Content</div>} />
+        {/* Workspace Routes */}
+        <Route path="/workspaces/:workspaceId" element={<WorkspaceProjectsPage />} />
+        
+        {/* Global/All Projects and Tasks */}
         <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/tasks" element={<div className="p-4">Tasks Content</div>} />
+        <Route path="/projects/:projectId" element={<ProjectsPage />} /> 
+
+        <Route path="/tasks" element={<div className="p-4">My Tasks Content</div>} />
       </Route>
       
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
