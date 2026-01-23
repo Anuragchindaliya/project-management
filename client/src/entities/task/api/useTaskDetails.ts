@@ -3,14 +3,80 @@ import { taskKeys } from './useTasks';
 import apiClient, { ApiResponse } from '@/shared/api/client';
 import { TaskComment } from '@/shared/types/drizzle.types';
 
+type CommentWithUserType = {
+    comment: {
+        id: string;
+        taskId: string;
+        userId: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+    };
+    user: {
+        id: string;
+        username: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: null;
+    };
+}
+type AssigneeType = {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string;
+}
+type TaskResponse = {
+    id: string;
+    projectId: string;
+    title: string;
+    description: string;
+    taskNumber: number;
+    status: string;
+    priority: string;
+    assigneeId: null;
+    reporterId: string;
+    parentTaskId: null;
+    estimatedHours: null;
+    actualHours: null;
+    dueDate: null;
+    completedAt: null;
+    createdAt: string;
+    updatedAt: string;
+    project: {
+        id: string;
+        workspaceId: string;
+        name: string;
+        key: string;
+        description: string;
+        ownerId: string;
+        status: string;
+        startDate: null;
+        endDate: null;
+        createdAt: string;
+        updatedAt: string;
+    };
+    assignee: AssigneeType;
+    reporter: {
+        id: string;
+        username: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: null;
+    };
+    comments: CommentWithUserType[];
+    attachments: never[];
+    subtasks: never[];
+};
 // Extended Task API for Details and Comments
 const taskDetailApi = {
     getTaskDetails: async (taskId: string) => {
-        const response = await apiClient.get<ApiResponse<{ task: any }>>(`/tasks/${taskId}`);
+        const response = await apiClient.get<ApiResponse<TaskResponse>>(`/tasks/${taskId}`);
         if (!response.data.success || !response.data.data) {
              throw new Error(response.data.error || 'Failed to fetch task details');
         }
-        return response.data.data.task;
+        return response.data.data;
     },
     
     addComment: async (taskId: string, content: string) => {

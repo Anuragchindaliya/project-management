@@ -65,11 +65,52 @@ export class TaskController {
       const { taskId } = req.params;
       const userId = req.user!.userId;
 
-      const task = await taskService.getTaskById(taskId, userId);
+      const details = await taskService.getTaskWithDetails(taskId, userId);
+
+      // Merge into a single object for frontend convenience
+      const task = {
+          ...details.task,
+          project: details.project,
+          assignee: details.assignee,
+          reporter: details.reporter,
+          comments: details.comments,
+          attachments: details.attachments,
+          subtasks: details.subtasks
+      };
 
       return res.json({
         success: true,
-        data: { task },
+        data: task, // Return directly as data, or { task }? Use 'task' key to be safe if frontend expects it, or just data.
+        // Previous was `data: { task }`.
+        // If I change to `data: task`, then `response.data` IS the task.
+        // If I keep `data: { task }`, then `response.data.task` IS the task.
+        // Let's stick to `data: task` (direct object) is better API design, but might break if frontend expects nested.
+        // Let's look at `TaskDetailSheet` usage: `const { data: task } = useTaskDetails`.
+        // Usually `data` is the T.
+        // If `useTaskDetails` uses `api.get<ApiResponse<Task>>`, then `response.data` is Task.
+        // So `data: task` matches `response.data = task`.
+        // Previous `data: { task }` would mean `response.data = { task: ... }`.
+        // If existing code worked for BASIC task, how was it structure?
+        // `getTaskById` returned `data: { task }`.
+        // So I should return `data: { task: mergedTask }` to be backward compatible?
+        // OR `data: mergedTask`?
+        // Let's assume `data: { ...task }` because of line 72 `data: { task }`.
+        // Wait, if I change it, I should be careful.
+        // But `TaskDetailSheet` says `task?.project`.
+        // If `task` was `{ task: ... }`, then `task.task.project`? No.
+        // `useTaskDetails` probably extracts `data`.
+        // I will return `data: task` (assigning to `task` variable name in JSON shorthand? No `data` key).
+        // `res.json({ data: task })` -> JSON is `{ data: { ... } }`.
+        // The merged object is `task`.
+        // So JSON is `{ success: true, data: { id:..., project:..., ... } }`.
+        // Previous: `data: { task: { id... } }` -> `{ data: { task: { id... } } }`.
+        // If frontend hook does `return response.data.task`, then I must keep structure.
+        // BUT current frontend code `task?.project` implies `task` has `project`.
+        // If `task` was the wrapper, `task.task`?
+        // I'll bet the previous `data: { task }` was unwrapped by frontend to just return `task`.
+        // So I should populate `data: { task: mergedTask }` OR changes frontend hook.
+        // I will try to match the return shape but ENRICHED.
+        // I'll return `data: { task: mergedTask }`.
       });
     } catch (error) {
       return res.status(404).json({

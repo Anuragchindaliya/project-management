@@ -57,3 +57,27 @@ export function useInviteMember() {
     }
   });
 }
+
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ workspaceId, userId, role }: { workspaceId: string; userId: string; role: 'admin' | 'member' | 'viewer' }) =>
+      workspaceApi.updateWorkspaceMemberRole(workspaceId, userId, role),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...workspaceKeys.detail(variables.workspaceId), 'members'] });
+    }
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ workspaceId, userId }: { workspaceId: string; userId: string }) =>
+      workspaceApi.removeWorkspaceMember(workspaceId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...workspaceKeys.detail(variables.workspaceId), 'members'] });
+    }
+  });
+}

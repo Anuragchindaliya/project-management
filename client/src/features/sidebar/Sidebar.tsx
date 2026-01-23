@@ -34,6 +34,7 @@ import { useWorkspaceProjects } from "@/entities/project/api/useProjects";
 import { CreateProjectDialog } from "@/features/create/CreateProjectDialog";
 import { InviteMemberDialog } from "@/features/workspace/InviteMemberDialog";
 import { CreateWorkspaceDialog } from "@/features/create/CreateWorkspaceDialog"; 
+import { WorkspaceSettingsDialog } from "@/features/workspace/WorkspaceSettingsDialog"; 
 
 export function Sidebar({ className }: { className?: string }) {
   const navigate = useNavigate();
@@ -227,10 +228,13 @@ export function Sidebar({ className }: { className?: string }) {
                             <UserPlus className="mr-2 h-4 w-4" />
                             Invite Members
                          </Button>
-                         <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Settings
-                         </Button>
+                         
+                         <WorkspaceSettingsDialog>
+                            <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground">
+                                <Settings className="mr-2 h-4 w-4" />
+                                Settings
+                            </Button>
+                         </WorkspaceSettingsDialog>
                     </>
                  )}
             </div>

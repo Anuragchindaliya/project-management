@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TaskDetailSheetProps {
     taskId: string | null;
@@ -17,6 +18,7 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
     const { data: task, isLoading } = useTaskDetails(taskId);
     // Fetch workspace members using the workspace ID from the task's project
     const { data: members = [] } = useWorkspaceMembers(task?.project?.workspaceId || "");
+    
 
     const { mutate: addComment, isPending: isAddingComment } = useAddComment();
     const { mutate: assignTask, isPending: isAssigning } = useAssignTask();
@@ -73,26 +75,36 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
                                 <span className="text-muted-foreground text-xs font-medium uppercase">Assignee</span>
                                 <div className="flex items-center gap-2">
                                     <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs overflow-hidden">
-                                         {task.assignee?.avatarUrl ? (
+                                         {task.assignee && task.assignee.avatarUrl && (
                                              <img src={task.assignee.avatarUrl} alt={task.assignee.firstName || 'User'} className="h-full w-full object-cover"/>
-                                         ) : (
-                                            <span>{task.assignee?.firstName?.[0] || 'U'}</span>
+                                         )}
+                                         {task.assignee && !task.assignee.avatarUrl && (
+                                            <span>{task.assignee.firstName[0] + task.assignee.lastName[0]}</span>
+                                         )}
+                                         {!task.assignee && (
+                                            <User className="h-4 w-4 text-muted-foreground" />
                                          )}
                                     </div>
                                     
-                                    <select 
-                                        className="bg-transparent border-none text-sm font-medium focus:ring-0 p-0 cursor-pointer hover:underline"
-                                        value={task.assigneeId || ""}
-                                        onChange={(e) => handleAssign(e.target.value)}
+                                    <Select 
+                                        onValueChange={(e) => handleAssign(e)}
                                         disabled={isAssigning}
+                                        value={task.assigneeId || ""}
+                                        
                                     >
-                                        <option value="" disabled>Unassigned</option>
-                                        {members.map((member: any) => (
-                                            <option key={member.userId} value={member.userId}>
-                                                {member.user.firstName} {member.user.lastName}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Assignee" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="unassigned" disabled>Unassigned</SelectItem>
+                                            {members.map((member: any) => (
+                                                <SelectItem key={member.member.userId} value={member.member.userId}>
+                                                    {member.user.firstName} {member.user.lastName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
                                     {isAssigning && <Loader2 className="h-3 w-3 animate-spin"/>}
                                 </div>
                             </div>
@@ -115,17 +127,17 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
                                 {task.comments?.length === 0 ? (
                                     <p className="text-sm text-muted-foreground italic">No comments yet.</p>
                                 ) : (
-                                    task.comments?.map((c: any) => (
-                                        <div key={c.id} className="flex gap-3 text-sm">
+                                    task.comments?.map((c) => (
+                                        <div key={c.comment.id} className="flex gap-3 text-sm">
                                              <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-xs font-medium">
                                                 {c.user?.firstName?.[0] || 'U'}
                                             </div>
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-semibold">{c.user?.firstName}</span>
-                                                    <span className="text-xs text-muted-foreground">{format(new Date(c.createdAt), 'MMM d, h:mm a')}</span>
+                                                    <span className="text-xs text-muted-foreground">{format(new Date(c?.comment?.createdAt), 'MMM d, h:mm a')}</span>
                                                 </div>
-                                                <p className="text-foreground/90">{c.content}</p>
+                                                <p className="text-foreground/90">{c.comment?.content}</p>
                                             </div>
                                         </div>
                                     ))

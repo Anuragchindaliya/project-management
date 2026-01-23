@@ -3,6 +3,9 @@ import { useDroppable } from "@dnd-kit/core";
 import { useMemo } from "react";
 import { KanbanCard } from "./KanbanCard";
 import { Task } from "@/shared/types/drizzle.types";
+import { Button } from "@/components/ui/button";
+import { CreateTaskDialog } from "../create/CreateTaskDialog";
+import { useParams } from "react-router-dom";
 
 interface Column {
     id: string;
@@ -16,6 +19,8 @@ interface Props {
 }
 
 export function KanbanColumn({ column, tasks, onTaskClick }: Props) {
+    const { projectId } = useParams();
+  
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
@@ -54,9 +59,11 @@ export function KanbanColumn({ column, tasks, onTaskClick }: Props) {
         </SortableContext>
         
         {tasks.length === 0 && (
-             <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg opacity-50">
-                 Drop items here
-             </div>
+          <CreateTaskDialog projectId={projectId}>
+             <Button variant="outline"  className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg opacity-50">
+                 Drop items here or Create Task
+             </Button>
+          </CreateTaskDialog>
         )}
       </div>
     </div>

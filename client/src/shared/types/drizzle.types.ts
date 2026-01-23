@@ -42,6 +42,26 @@ export interface WorkspaceMember {
   role: Role;
   joinedAt: Date;
 }
+export type WorkspaceMemberWithUserResponse = {
+    member: {
+        id: string;
+        workspaceId: string;
+        userId: string;
+        role: string;
+        invitedBy: string;
+        joinedAt: string;
+    };
+    user: {
+        id: string;
+        email: string;
+        username: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: null;
+    };
+} 
+
+
 
 export interface Project {
   id: string;

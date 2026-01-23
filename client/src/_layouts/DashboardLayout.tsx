@@ -18,7 +18,7 @@ export function DashboardLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen overflow-auto">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
