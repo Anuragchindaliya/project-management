@@ -34,22 +34,6 @@ export interface WorkspaceWithRole {
     workspace: Workspace;
     role: Role;
 }
-const data = [
-    {
-        "workspace": {
-            "id": "02754ea0-c890-4e24-a414-178b2b05ce97",
-            "name": "Department of telecommunication",
-            "slug": "dot",
-            "description": "DOT is for helping the indian goverment telecom infrastructure all action from permissions to make that project functional to manage in single platform",
-            "ownerId": "e15e95ee-55dc-4eeb-a110-16db740abd39",
-            "avatarUrl": null,
-            "isActive": "active",
-            "createdAt": "2026-01-23T12:20:25.000Z",
-            "updatedAt": "2026-01-23T12:20:25.000Z"
-        },
-        "role": "owner"
-    }
-]
 
 export interface WorkspaceMember {
   id: string;
@@ -98,4 +82,48 @@ export interface Task {
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  
+  // Relations often attached
+  assignee?: User;
+  reporter?: User;
+  comments?: TaskComment[];
+}
+
+export interface TaskResponse {
+    task: Task;
+    assignee: User | null;
+}
+
+const data = [
+    {
+        "task": {
+            "id": "29dda509-d53c-4d23-a224-270b188d887d",
+            "projectId": "9f028316-e867-4cf0-8576-4eca59d6680f",
+            "title": "Initial setup",
+            "description": "Make the initial setup with necessary dependencies",
+            "taskNumber": 1,
+            "status": "todo",
+            "priority": "medium",
+            "assigneeId": null,
+            "reporterId": "e15e95ee-55dc-4eeb-a110-16db740abd39",
+            "parentTaskId": null,
+            "estimatedHours": null,
+            "actualHours": null,
+            "dueDate": null,
+            "completedAt": null,
+            "createdAt": "2026-01-23T13:52:36.000Z",
+            "updatedAt": "2026-01-23T13:52:36.000Z"
+        },
+        "assignee": null
+    }
+]
+
+export interface TaskComment {
+    id: string;
+    content: string;
+    taskId: string;
+    userId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    user?: User;
 }

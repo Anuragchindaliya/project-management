@@ -1,22 +1,27 @@
 /**
  * Socket.io hook for real-time updates
  * Listens for events and invalidates TanStack Query cache
+ * Returns the socket instance for custom events
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
 
-
+// Singleton socket instance to avoid multiple connections
+let socket: Socket | null = null;
 
 export function useSocket() {
   const queryClient = useQueryClient();
+  const [socketInstance, setSocketInstance] = useState<Socket | null>(socket);
 
   useEffect(() => {
-    // Connect to socket.io server
-    const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
-      withCredentials: true,
-    });
+    if (!socket) {
+        socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
+            withCredentials: true,
+        });
+    }
+    setSocketInstance(socket);
 
     // Listen for project events
     socket.on('project:created', () => {
@@ -69,9 +74,15 @@ export function useSocket() {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
     });
 
-    // Cleanup on unmount
+    // Cleanup on unmount? 
+    // Usually we want to keep socket open, but maybe remove listeners?
+    // For now, let's keep it simple.
+    
     return () => {
-      socket.disconnect();
+      // socket?.disconnect(); 
+      // We don't disconnect singleton usually unless app unmounts
     };
   }, [queryClient]);
+
+  return { socket: socketInstance };
 }

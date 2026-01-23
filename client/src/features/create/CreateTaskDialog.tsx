@@ -26,9 +26,11 @@ const taskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
+import { useCreateTask } from '@/entities/task/api/useTasks';
+
 export function CreateTaskDialog({ children, projectId }: { children: React.ReactNode, projectId?: string }) {
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: createTask, isPending } = useCreateTask(projectId || "");
 
   const {
     register,
@@ -42,22 +44,23 @@ export function CreateTaskDialog({ children, projectId }: { children: React.Reac
     }
   });
 
-  const onSubmit = async (data: TaskFormValues) => {
-    setIsLoading(true);
-    try {
-      // API call placeholder
-      console.log('Creating task', data, projectId);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Task created successfully');
-      setOpen(false);
-      reset();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to create task');
-    } finally {
-      setIsLoading(false);
+  const onSubmit = (data: TaskFormValues) => {
+    if (!projectId) {
+        toast.error("Project context missing");
+        return;
     }
+    
+    createTask(data, {
+        onSuccess: () => {
+             toast.success('Task created successfully');
+             setOpen(false);
+             reset();
+        },
+        onError: (error) => {
+             console.error(error);
+             toast.error('Failed to create task');
+        }
+    });
   };
 
   return (
@@ -107,8 +110,8 @@ export function CreateTaskDialog({ children, projectId }: { children: React.Reac
             />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Task
             </Button>
           </DialogFooter>

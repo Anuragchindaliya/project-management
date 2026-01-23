@@ -15,9 +15,15 @@ import {
   getWorkspaceProjectsSchema,
 } from '../../validators/project.validator';
 import { ProjectController } from '../../controllers/project.controller';
+import { TaskController } from '../../controllers/task.controller';
+import {
+  createTaskSchema,
+  getProjectTasksSchema,
+} from '../../validators/task.validator';
 
 const router = Router();
 const projectController = new ProjectController();
+const taskController = new TaskController();
 
 // All routes require authentication
 router.use(authenticate);
@@ -39,6 +45,19 @@ router.get(
 router.get('/health', projectController.getProjectsHealth);
 
 router.get('/:projectId', validateRequest(getProjectSchema), projectController.getProjectById);
+
+router.post(
+  '/:projectId/tasks',
+  requireProjectPermission('canCreateTasks'),
+  validateRequest(createTaskSchema),
+  taskController.createTask
+);
+
+router.get(
+  '/:projectId/tasks',
+  validateRequest(getProjectTasksSchema),
+  taskController.getProjectTasks
+);
 
 router.patch(
   '/:projectId',

@@ -9,18 +9,17 @@ import {
   DragEndEvent,
   DragOverEvent,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove } from "@dnd-kit/sortable";
+import { SortableContext } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard } from "./KanbanCard";
 import { createPortal } from "react-dom";
-
-// Mock Data Types (Replace with actual types from API)
-interface Task {
-    id: string;
-    title: string;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    columnId: string;
-}
+import { useParams } from "react-router-dom";
+import { useProjectTasks, useUpdateTask } from "@/entities/task/api/useTasks";
+import { TaskDetailSheet } from "@/features/tasks/TaskDetailSheet";
+import { useTaskSocketEvents } from "@/shared/hooks/useTaskSocket";
+import { CreateTaskDialog } from "@/features/create/CreateTaskDialog";
+import { Button } from "@/components/ui/button";
+import { Plus, Filter } from "lucide-react";
 
 const defaultCols = [
   { id: "todo", title: "To Do" },
@@ -29,17 +28,19 @@ const defaultCols = [
   { id: "done", title: "Done" },
 ];
 
-const defaultTasks: Task[] = [
-    { id: "1", title: "Implement Sidebar", priority: "high", columnId: "todo" },
-    { id: "2", title: "Create Login Page", priority: "urgent", columnId: "done" },
-    { id: "3", title: "Setup Database", priority: "medium", columnId: "in_progress" },
-];
-
 export function KanbanBoard() {
-  const [columns, _setColumns] = useState(defaultCols);
-  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+  const { projectId } = useParams();
+  const [columns] = useState(defaultCols);
+  
+  const { data: tasks = [] } = useProjectTasks(projectId || "");
+  console.log({tasks,projectId});
+  const { mutate: updateTask } = useUpdateTask(projectId || "");
+  
+  useTaskSocketEvents(projectId); // Real-time sync
+
   const [activeColumn, setActiveColumn] = useState<any | null>(null);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<any | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -70,102 +71,101 @@ export function KanbanBoard() {
     const { active, over } = event;
     if (!over) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
-    if (activeId === overId) return;
-
-    // Handle Task Drop
     const isActiveTask = active.data.current?.type === "Task";
     if (!isActiveTask) return;
     
-    // In same column or different column (handled by onDragOver usually, 
-    // but onDragEnd finalizes it)
-    
-    // For simplicity in this demo, standard array move might not enough if we assume API updates.
-    // We update local state to reflect new order/column.
-    
-    // Note: detailed reordering logic for different columns is handled in onDragOver usually for visual feedback
-  }
-
-  function onDragOver(event: DragOverEvent) {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const isActiveTask = active.data.current?.type === "Task";
-    const isOverTask = over.data.current?.type === "Task";
-
-    if (!isActiveTask) return;
-
-    // Dropping a Task over another Task
-    if (isActiveTask && isOverTask) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId);
-        const overIndex = tasks.findIndex((t) => t.id === overId);
-
-        if (tasks[activeIndex].columnId !== tasks[overIndex].columnId) {
-          tasks[activeIndex].columnId = tasks[overIndex].columnId;
-        }
-
-        return arrayMove(tasks, activeIndex, overIndex);
-      });
-    }
-
+    // Check if dropped over column
     const isOverColumn = over.data.current?.type === "Column";
-
-    // Dropping a Task over a Column
-    if (isActiveTask && isOverColumn) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId);
-
-        tasks[activeIndex].columnId = overId as string;
-        
-        // Move to end of column or specific logic
-        return arrayMove(tasks, activeIndex, activeIndex); 
-      });
+    if (isOverColumn) {
+        if (activeTask?.columnId !== overId) {
+             updateTask({ taskId: activeId, data: { status: overId as any } });
+        }
+    }
+    
+    // Check if dropped over task
+    const isOverTask = over.data.current?.type === "Task";
+    if (isOverTask) {
+        const overTask = over.data.current?.task;
+        if (overTask && overTask.columnId !== activeTask?.columnId) {
+             updateTask({ taskId: activeId, data: { status: overTask.columnId as any } });
+        }
     }
   }
+
+  function onDragOver(_event: DragOverEvent) {
+      // Visual only logic if needed
+  }
+  
+  const mappedTasks = useMemo(() => {
+      return tasks.map(t => ({
+          ...t,
+          columnId: t.status 
+      }));
+  }, [tasks]);
 
   return (
-    <div className="flex h-[calc(100vh-140px)] w-full overflow-x-auto overflow-y-hidden px-4">
-      <DndContext
-        sensors={sensors}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragOver={onDragOver}
-      >
-        <div className="flex gap-4">
-            <SortableContext items={columnsId}>
-            {columns.map((col) => (
-                <KanbanColumn
-                    key={col.id}
-                    column={col}
-                    tasks={tasks.filter((task) => task.columnId === col.id)}
-                />
-            ))}
-            </SortableContext>
+    <div className="flex flex-col h-full gap-4">
+        {/* Kanban Toolbar */}
+        <div className="flex items-center justify-between px-4">
+            <div className="flex items-center gap-2">
+                 {/* Filters could go here */}
+                 <Button variant="outline" size="sm" className="h-8 gap-2">
+                    <Filter className="h-3.5 w-3.5" />
+                    Filter
+                 </Button>
+            </div>
+            <CreateTaskDialog projectId={projectId}>
+                <Button size="sm" className="h-8 gap-2">
+                    <Plus className="h-3.5 w-3.5" />
+                    Task
+                </Button>
+            </CreateTaskDialog>
         </div>
 
-        {createPortal(
-          <DragOverlay>
-            {activeColumn && (
-              <KanbanColumn
-                column={activeColumn}
-                tasks={tasks.filter(
-                  (task) => task.columnId === activeColumn.id
+        <div className="flex flex-1 w-full overflow-x-auto overflow-y-hidden px-4 pb-4">
+          <DndContext
+            sensors={sensors}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragOver={onDragOver}
+          >
+            <div className="flex gap-4 h-full">
+                <SortableContext items={columnsId}>
+                {columns.map((col) => (
+                    <KanbanColumn
+                        key={col.id}
+                        column={col}
+                        tasks={mappedTasks.filter((task) => task.columnId === col.id)}
+                        onTaskClick={setSelectedTaskId}
+                    />
+                ))}
+                </SortableContext>
+            </div>
+
+            {createPortal(
+              <DragOverlay>
+                {activeColumn && (
+                  <KanbanColumn
+                    column={activeColumn}
+                    tasks={mappedTasks.filter(
+                      (task) => task.columnId === activeColumn.id
+                    )}
+                  />
                 )}
-              />
+                {activeTask && <KanbanCard task={activeTask} />}
+              </DragOverlay>,
+              document.body
             )}
-            {activeTask && <KanbanCard task={activeTask} />}
-          </DragOverlay>,
-          document.body
-        )}
-      </DndContext>
+          </DndContext>
+
+            <TaskDetailSheet 
+                taskId={selectedTaskId} 
+                onClose={() => setSelectedTaskId(null)} 
+            />
+        </div>
     </div>
   );
 }

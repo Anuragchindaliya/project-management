@@ -1,5 +1,5 @@
 import apiClient, { type ApiResponse } from '@/shared/api/client';
-import type { Task } from '@/shared/types/drizzle.types';
+import type { Task, TaskResponse } from '@/shared/types/drizzle.types';
 
 export interface CreateTaskDTO {
   title: string;
@@ -16,13 +16,16 @@ export interface UpdateTaskDTO extends Partial<CreateTaskDTO> {
 
 export const taskApi = {
   getProjectTasks: async (projectId: string): Promise<Task[]> => {
-    const response = await apiClient.get<ApiResponse<{ tasks: Task[] }>>(
+    const response = await apiClient.get<ApiResponse<{ tasks: TaskResponse[] }>>(
       `/projects/${projectId}/tasks`
     );
      if (!response.data.success || !response.data.data) {
         throw new Error(response.data.error || 'Failed to fetch tasks');
     }
-    return response.data.data.tasks;
+    return response.data.data.tasks.map(t => ({
+        ...t.task,
+        assignee: t.assignee || undefined
+    }));
   },
 
   createTask: async (projectId: string, data: CreateTaskDTO): Promise<Task> => {

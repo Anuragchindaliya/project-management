@@ -1,71 +1,63 @@
-import { SortableContext, useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { SortableContext } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import { useMemo } from "react";
 import { KanbanCard } from "./KanbanCard";
-
+import { Task } from "@/shared/types/drizzle.types";
 
 interface Column {
-  id: string;
-  title: string;
+    id: string;
+    title: string;
 }
 
-interface Task {
-  id: string;
-  title: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  columnId: string;
-}
-
-interface KanbanColumnProps {
+interface Props {
   column: Column;
   tasks: Task[];
+  onTaskClick?: (taskId: string) => void;
 }
 
-export function KanbanColumn({ column, tasks }: KanbanColumnProps) {
-  const taskIds = useMemo(() => {
+export function KanbanColumn({ column, tasks, onTaskClick }: Props) {
+  const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
 
-  const {
-    setNodeRef,
-    attributes: _attributes,
-    listeners: _listeners,
-    transform,
-    transition,
-    isDragging: _isDragging,
-  } = useSortable({
+  const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
       type: "Column",
       column,
     },
-    disabled: true, // Disable dragging columns for simplicity for now, enable if needed
   });
-
-  const style = {
-    transition,
-    transform: CSS.Transform.toString(transform),
-  };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="flex h-full w-[300px] min-w-[300px] flex-col rounded-xl bg-muted/50 p-4"
+      className="w-[350px] min-w-[350px] h-[calc(100vh-200px)] rounded-md flex flex-col bg-muted/30 border border-border/50"
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-foreground/80">{column.title}</h3>
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
-            {tasks.length}
-        </span>
+      <div className="bg-muted/50 p-3 text-sm font-semibold rounded-t-md flex items-center justify-between border-b">
+        <div className="flex items-center gap-2">
+           <span className={`w-2 h-2 rounded-full 
+             ${column.id === 'todo' ? 'bg-slate-500' :
+               column.id === 'in_progress' ? 'bg-blue-500' :
+               column.id === 'in_review' ? 'bg-yellow-500' :
+               'bg-green-500'}
+           `} />
+           {column.title}
+        </div>
+        <span className="bg-background px-2 py-0.5 rounded text-xs text-muted-foreground border shadow-sm">{tasks.length}</span>
       </div>
-      
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden p-1">
-        <SortableContext items={taskIds}>
+
+      <div className="flex flex-grow flex-col gap-3 p-3 overflow-y-auto overflow-x-hidden">
+        <SortableContext items={tasksIds}>
           {tasks.map((task) => (
-            <KanbanCard key={task.id} task={task} />
+            <KanbanCard key={task.id} task={task} onClick={() => onTaskClick?.(task.id)} />
           ))}
         </SortableContext>
+        
+        {tasks.length === 0 && (
+             <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg opacity-50">
+                 Drop items here
+             </div>
+        )}
       </div>
     </div>
   );
