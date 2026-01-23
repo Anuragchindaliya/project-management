@@ -47,7 +47,7 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: (data: CreateProjectDTO) => projectApi.createProject(data),
-    onSuccess: (newProject: Project) => {
+    onSuccess: (_newProject: Project) => {
       // Invalidate and refetch workspace projects list
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       // Optionally set the new project as active

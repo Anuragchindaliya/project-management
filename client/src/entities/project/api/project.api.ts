@@ -4,7 +4,7 @@
  */
 
 import apiClient, { type ApiResponse } from '@/shared/api/client';
-import type { Project, ProjectInsert } from '@/shared/types/drizzle.types';
+import type { Project } from '@/shared/types/drizzle.types';
 
 // Project-specific DTOs (for create/update operations)
 export interface CreateProjectDTO {

@@ -1,18 +1,10 @@
-/**
- * Zustand store for authentication state
- * This is for local UI state, not server state
- */
-
 import { create } from 'zustand';
+import { User } from '@/shared/api/auth';
 
 interface AuthState {
-  user: {
-    userId: string;
-    email: string;
-    username: string;
-  } | null;
+  user: User | null;
   isAuthenticated: boolean;
-  setUser: (user: AuthState['user']) => void;
+  setUser: (user: User | null) => void;
   clearUser: () => void;
 }
 

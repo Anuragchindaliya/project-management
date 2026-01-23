@@ -7,24 +7,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
 
-// Socket events that should trigger query invalidation
-const INVALIDATION_EVENTS = {
-  project: {
-    created: ['projects'],
-    updated: ['projects', 'project'],
-    deleted: ['projects'],
-  },
-  task: {
-    created: ['tasks', 'project'],
-    updated: ['tasks', 'task', 'project'],
-    deleted: ['tasks', 'project'],
-  },
-  workspace: {
-    created: ['workspaces'],
-    updated: ['workspaces', 'workspace'],
-    deleted: ['workspaces'],
-  },
-} as const;
+
 
 export function useSocket() {
   const queryClient = useQueryClient();
