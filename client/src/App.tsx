@@ -8,8 +8,16 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { DashboardLayout } from './_layouts/DashboardLayout';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
+import { TasksPage } from './pages/tasks/TasksPage';
+import { InboxPage } from './pages/inbox/InboxPage';
 import { WorkspaceProjectsPage } from './pages/workspaces/WorkspaceProjectsPage';
 import { LandingPage } from './pages/landing/LandingPage';
+// ... (omitting imports for brevity if possible, or just replacing imports block?)
+// I need to add import at top and replace route at bottom.
+// I will do two chunks or use multi_replace. Or replace entire content if small enough? 90 lines.
+// I'll stick to replace_file_content for imports FIRST using Context? No, "Instruction" handles logic but here I should provide exact Replacement.
+// I'll use multi_replace or carefully crafted replace.
+// Let's use multi_replace to be safe with multiple edits.
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -64,7 +72,8 @@ function AppContent() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:projectId" element={<ProjectsPage />} /> 
 
-        <Route path="/tasks" element={<div className="p-4">My Tasks Content</div>} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/inbox" element={<InboxPage />} />
       </Route>
       
       {/* Fallback */}

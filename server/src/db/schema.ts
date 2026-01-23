@@ -8,6 +8,7 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  boolean,
 } from 'drizzle-orm/mysql-core';
 
 export interface Task {
@@ -435,6 +436,38 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
   user: one(users, {
     fields: [activityLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// NOTIFICATIONS TABLE
+// ============================================
+export const notifications = mysqlTable(
+  'notifications',
+  {
+    id: varchar('id', { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: varchar('user_id', { length: 36 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: varchar('type', { length: 50 }).notNull(), // e.g., 'assigned', 'comment', 'system'
+    title: varchar('title', { length: 255 }).notNull(),
+    message: text('message'),
+    link: text('link'), // URL or path to redirect to
+    isRead: boolean('is_read').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index('user_idx').on(table.userId),
+    createdAtIdx: index('created_at_idx').on(table.createdAt),
+  })
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
     references: [users.id],
   }),
 }));

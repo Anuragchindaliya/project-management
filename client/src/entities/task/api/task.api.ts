@@ -9,6 +9,32 @@ export interface CreateTaskDTO {
   dueDate?: string; // ISO
   assigneeId?: string;
 }
+export type ProjectTaskResponse = {
+    task: {
+        id: string;
+        projectId: string;
+        title: string;
+        description: string;
+        taskNumber: number;
+        status: string;
+        priority: string;
+        assigneeId: string;
+        reporterId: string;
+        parentTaskId: null;
+        estimatedHours: null;
+        actualHours: null;
+        dueDate: null;
+        completedAt: null;
+        createdAt: string;
+        updatedAt: string;
+    };
+    project: {
+        id: string;
+        name: string;
+        key: string;
+        workspaceId: string;
+    };
+}[]
 
 export interface UpdateTaskDTO extends Partial<CreateTaskDTO> {
     status?: 'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked';
@@ -45,6 +71,18 @@ export const taskApi = {
         throw new Error(response.data.error || 'Failed to update task');
     }
     return response.data.data.task;
+  },
+
+  getUserTasks: async (filters: { status?: string; priority?: string } = {}) => {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.priority) params.append('priority', filters.priority);
+      
+      const response = await apiClient.get<ApiResponse<ProjectTaskResponse>>(`/tasks/my-tasks?${params.toString()}`);
+       if (!response.data.success || !response.data.data) {
+        throw new Error(response.data.error || 'Failed to fetch user tasks');
+    }
+      return response.data.data;
   },
 
   assignTask: async (taskId: string, assigneeId: string): Promise<Task> => {

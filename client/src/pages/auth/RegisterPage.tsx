@@ -83,8 +83,8 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50/50 backdrop-blur-sm">
-      <Card className="w-full max-w-md border-gray-200 bg-white/70 shadow-xl backdrop-blur-xl animate-in fade-in zoom-in duration-300">
+    <div className="flex min-h-screen items-center justify-center bg-muted/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md bg-card shadow-xl backdrop-blur-xl animate-in fade-in zoom-in duration-300">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">
             Create an account
@@ -99,12 +99,12 @@ export function RegisterPage() {
                 <div className="space-y-2">
                     <Label htmlFor="firstName">First name</Label>
                     <Input id="firstName" placeholder="John" {...register('firstName')} disabled={isLoading} />
-                    {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
+                    {errors.firstName && <p className="text-xs text-destructive">{errors.firstName.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="lastName">Last name</Label>
                     <Input id="lastName" placeholder="Doe" {...register('lastName')} disabled={isLoading} />
-                    {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
+                    {errors.lastName && <p className="text-xs text-destructive">{errors.lastName.message}</p>}
                 </div>
              </div>
             <div className="space-y-2">
@@ -117,7 +117,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {errors.email.message}
                 </p>
               )}
@@ -131,7 +131,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {errors.password.message}
                 </p>
               )}
@@ -145,7 +145,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.confirmPassword && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {errors.confirmPassword.message}
                 </p>
               )}
@@ -165,7 +165,7 @@ export function RegisterPage() {
       </Card>
       
       {/* Background decoration */}
-      <div className="fixed inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)] opacity-30"></div>
+      <div className="fixed inset-0 -z-10 h-full w-full bg-background [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30 dark:opacity-20"></div>
     </div>
   );
 }

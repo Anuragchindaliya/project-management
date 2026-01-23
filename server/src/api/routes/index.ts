@@ -5,8 +5,9 @@ import projectRoutes from './project.routes';
 import taskRoutes from './task.routes';
 import commentRoutes from './comment.routes';
 import dashboardRoutes from './dashboard.routes';
+import notificationRoutes from './notification.routes';
+import activityRoutes from './activity.routes';
 // import attachmentRoutes from './attachment.routes';
-// import activityRoutes from './activity.routes';
 
 const router = Router();
 
@@ -24,9 +25,11 @@ router.get('/health', (_, res) => {
 router.use('/auth', authRoutes);
 router.use('/workspaces', workspaceRoutes);
 router.use('/projects', projectRoutes);
+router.use('/', activityRoutes); // Mount before tasks to capture /tasks/:taskId/activity
 router.use('/tasks', taskRoutes);
 router.use('/comments', commentRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/notifications', notificationRoutes);
 // router.use('/attachments', attachmentRoutes);
 // router.use('/activity', activityRoutes);
 

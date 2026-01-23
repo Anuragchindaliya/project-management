@@ -55,8 +55,8 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50/50 backdrop-blur-sm">
-      <Card className="w-full max-w-md border-gray-200 bg-white/70 shadow-xl backdrop-blur-xl">
+    <div className="flex min-h-screen items-center justify-center bg-muted/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md bg-card shadow-xl backdrop-blur-xl animate-in fade-in zoom-in duration-300">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">
             Welcome back
@@ -77,7 +77,7 @@ export function LoginPage() {
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-sm text-destructive text-red-500">
+                <p className="text-sm text-destructive">
                   {errors.email.message}
                 </p>
               )}
@@ -91,7 +91,7 @@ export function LoginPage() {
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-sm text-destructive text-red-500">
+                <p className="text-sm text-destructive">
                   {errors.password.message}
                 </p>
               )}
@@ -111,7 +111,7 @@ export function LoginPage() {
       </Card>
       
       {/* Background decoration */}
-      <div className="fixed inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)] opacity-30"></div>
+      <div className="fixed inset-0 -z-10 h-full w-full bg-background [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30 dark:opacity-20"></div>
     </div>
   );
 }

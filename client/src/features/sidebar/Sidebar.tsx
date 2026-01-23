@@ -35,11 +35,20 @@ import { CreateProjectDialog } from "@/features/create/CreateProjectDialog";
 import { InviteMemberDialog } from "@/features/workspace/InviteMemberDialog";
 import { CreateWorkspaceDialog } from "@/features/create/CreateWorkspaceDialog"; 
 import { WorkspaceSettingsDialog } from "@/features/workspace/WorkspaceSettingsDialog"; 
+import { useTheme } from "@/features/theme/ThemeProvider";
+import {
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+    DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu";
+import { Moon, Sun } from "lucide-react";
 
 export function Sidebar({ className }: { className?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { setTheme } = useTheme();
   const { activeWorkspaceId, setActiveWorkspace } = useWorkspaceStore();
   const { data: workspaces = [] } = useUserWorkspaces();
   const { canCreateProject, canManageMembers } = usePermissions(); // Removed arg
@@ -260,6 +269,30 @@ export function Sidebar({ className }: { className?: string }) {
                          <DropdownMenuLabel>My Account</DropdownMenuLabel>
                          <DropdownMenuSeparator />
                          <DropdownMenuItem>Profile</DropdownMenuItem>
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                                <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                                <span className={cn("ml-2", "dark:ml-8")}>Theme</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => setTheme("light")}>
+                                        <Sun className="mr-2 h-4 w-4" />
+                                        Light
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setTheme("dark")}>
+                                        <Moon className="mr-2 h-4 w-4" />
+                                        Dark
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setTheme("system")}>
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        System
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                         </DropdownMenuSub>
+                         <DropdownMenuSeparator />
                          <DropdownMenuItem onClick={logout}>
                              <LogOut className="mr-2 h-4 w-4" />
                              Log out

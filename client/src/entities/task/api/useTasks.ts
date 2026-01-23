@@ -6,7 +6,15 @@ export const taskKeys = {
   all: ['tasks'] as const,
   project: (projectId: string) => [...taskKeys.all, 'project', projectId] as const,
   detail: (id: string) => [...taskKeys.all, 'detail', id] as const,
+  user: (userId: string) => [...taskKeys.all, 'user', userId] as const,
 };
+
+export function useUserTasks() {
+    return useQuery({
+        queryKey: ['tasks', 'user', 'me'],
+        queryFn: () => taskApi.getUserTasks(),
+    });
+}
 
 export function useProjectTasks(projectId: string) {
   return useQuery({

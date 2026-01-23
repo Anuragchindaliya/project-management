@@ -1,13 +1,15 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { useTaskDetails, useAddComment, useAssignTask } from "@/entities/task/api/useTaskDetails";
 import { useWorkspaceMembers } from "@/entities/workspace/api/useWorkspaces";
+import { useTaskActivity } from "@/entities/activity/api/useActivity";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Loader2, Send, User } from "lucide-react";
+import { Loader2, Send, User, History as HistoryIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TaskDetailSheetProps {
     taskId: string | null;
@@ -16,6 +18,7 @@ interface TaskDetailSheetProps {
 
 export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
     const { data: task, isLoading } = useTaskDetails(taskId);
+    console.log({task})
     // Fetch workspace members using the workspace ID from the task's project
     const { data: members = [] } = useWorkspaceMembers(task?.project?.workspaceId || "");
     
@@ -50,101 +53,119 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : task ? (
-                    <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2">
-                        {/* Header Info */}
-                        <div>
-                             <h2 className="text-2xl font-semibold leading-none tracking-tight mb-2">{task.title}</h2>
-                             <div className="flex items-center gap-2">
-                                <Badge variant={task.priority === 'urgent' ? 'destructive' : 'secondary'} className="uppercase text-xs">
-                                    {task.priority}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">{task.status.replace('_', ' ')}</span>
-                             </div>
+                    <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden">
+                        <div className="px-6 border-b">
+                            <TabsList className="w-full justify-start rounded-none border-b-0 p-0 h-auto bg-transparent">
+                                <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">Details</TabsTrigger>
+                                <TabsTrigger value="history" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">History</TabsTrigger>
+                            </TabsList>
                         </div>
 
-                        {/* Description */}
-                        {task.description && (
-                            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
-                                {task.description}
+                        <TabsContent value="details" className="flex-1 flex flex-col gap-6 overflow-y-auto p-6 pt-4">
+                             {/* Header Info */}
+                            <div>
+                                 <h2 className="text-2xl font-semibold leading-none tracking-tight mb-2">{task.title}</h2>
+                                 <div className="flex items-center gap-2">
+                                    <Badge variant={task.priority === 'urgent' ? 'destructive' : 'secondary'} className="uppercase text-xs">
+                                        {task.priority}
+                                    </Badge>
+                                    <span className="text-sm text-muted-foreground">{task.status.replace('_', ' ')}</span>
+                                 </div>
                             </div>
-                        )}
 
-                        {/* Metadata */}
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-xs font-medium uppercase">Assignee</span>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs overflow-hidden">
-                                         {task.assignee && task.assignee.avatarUrl && (
-                                             <img src={task.assignee.avatarUrl} alt={task.assignee.firstName || 'User'} className="h-full w-full object-cover"/>
-                                         )}
-                                         {task.assignee && !task.assignee.avatarUrl && (
-                                            <span>{task.assignee.firstName[0] + task.assignee.lastName[0]}</span>
-                                         )}
-                                         {!task.assignee && (
-                                            <User className="h-4 w-4 text-muted-foreground" />
-                                         )}
-                                    </div>
-                                    
-                                    <Select 
-                                        onValueChange={(e) => handleAssign(e)}
-                                        disabled={isAssigning}
-                                        value={task.assigneeId || ""}
-                                        
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Assignee" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="unassigned" disabled>Unassigned</SelectItem>
-                                            {members.map((member: any) => (
-                                                <SelectItem key={member.member.userId} value={member.member.userId}>
-                                                    {member.user.firstName} {member.user.lastName}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    {isAssigning && <Loader2 className="h-3 w-3 animate-spin"/>}
+                            {/* Description */}
+                            {task.description && (
+                                <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
+                                    {task.description}
                                 </div>
-                            </div>
-                             <div className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-xs font-medium uppercase">Reporter</span>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
-                                        {task.reporter?.firstName?.[0] || 'R'}
-                                    </div>
-                                    <span>{task.reporter?.firstName || 'Unknown'}</span>
-                                </div>
-                            </div>
-                        </div>
+                            )}
 
-                        {/* Comments Section */}
-                        <div className="flex-1 flex flex-col gap-4 mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-sm">Comments</h3>
-                            
-                            <div className="flex-1 space-y-4">
-                                {task.comments?.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground italic">No comments yet.</p>
-                                ) : (
-                                    task.comments?.map((c) => (
-                                        <div key={c.comment.id} className="flex gap-3 text-sm">
-                                             <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-xs font-medium">
-                                                {c.user?.firstName?.[0] || 'U'}
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-semibold">{c.user?.firstName}</span>
-                                                    <span className="text-xs text-muted-foreground">{format(new Date(c?.comment?.createdAt), 'MMM d, h:mm a')}</span>
-                                                </div>
-                                                <p className="text-foreground/90">{c.comment?.content}</p>
-                                            </div>
+                            {/* Metadata */}
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-muted-foreground text-xs font-medium uppercase">Assignee</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs overflow-hidden">
+                                             {task.assignee && task.assignee.avatarUrl && (
+                                                 <img src={task.assignee.avatarUrl} alt={task.assignee.firstName || 'User'} className="h-full w-full object-cover"/>
+                                             )}
+                                             {task.assignee && !task.assignee.avatarUrl && (
+                                                <span className="text-primary ">{task.assignee.firstName[0] + task.assignee.lastName[0]}</span>
+                                             )}
+                                             {!task.assignee && (
+                                                <User className="h-4 w-4 text-muted-foreground" />
+                                             )}
                                         </div>
-                                    ))
-                                )}
+
+ {/* <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
+                                            {task.assignee?.firstName?.[0] || 'R'}
+                                        </div> */}
+                                        
+                                        
+                                        <Select 
+                                            onValueChange={(e) => handleAssign(e)}
+                                            disabled={isAssigning}
+                                            value={task.assigneeId || ""}
+                                            defaultValue={task.assigneeId || ""}
+                                        >
+                                            <SelectTrigger className="h-8 outline-none border-none">
+                                                <SelectValue placeholder="Select Assignee" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="unassigned" disabled>Unassigned</SelectItem>
+                                                {members.map((member: any) => (
+                                                    <SelectItem key={member.member.userId} value={member.member.userId}>
+                                                        {member.user.firstName} {member.user.lastName}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+
+                                        {isAssigning && <Loader2 className="h-3 w-3 animate-spin"/>}
+                                    </div>
+                                </div>
+                                 <div className="flex flex-col gap-1">
+                                    <span className="text-muted-foreground text-xs font-medium uppercase">Reporter</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
+                                            {task.reporter?.firstName?.[0] || 'R'}
+                                        </div>
+                                        <span>{task.reporter?.firstName || 'Unknown'}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+
+                            {/* Comments Section */}
+                            <div className="flex-1 flex flex-col gap-4 mt-4 border-t pt-4">
+                                <h3 className="font-semibold text-sm">Comments</h3>
+                                
+                                <div className="flex-1 space-y-4">
+                                    {task.comments?.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground italic">No comments yet.</p>
+                                    ) : (
+                                        task.comments?.map((c) => (
+                                            <div key={c.comment.id} className="flex gap-3 text-sm">
+                                                 <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-xs font-medium">
+                                                    {c.user?.firstName?.[0] || 'U'}
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold">{c.user?.firstName}</span>
+                                                        <span className="text-xs text-muted-foreground">{format(new Date(c?.comment?.createdAt), 'MMM d, h:mm a')}</span>
+                                                    </div>
+                                                    <p className="text-foreground/90">{c.comment?.content}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="history" className="flex-1 overflow-y-auto p-6">
+                            <TaskHistory taskId={taskId} />
+                        </TabsContent>
+                    </Tabs>
                 ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                         Task not found
@@ -173,4 +194,43 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
             </SheetContent>
         </Sheet>
     );
+}
+
+function TaskHistory({ taskId }: { taskId: string }) {
+    const { data: activities, isLoading } = useTaskActivity(taskId);
+
+    if (isLoading) return <div className="flex justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+
+    if (!activities || activities.length === 0) return <p className="text-sm text-muted-foreground p-4">No activity yet.</p>;
+
+    return (
+        <div className="space-y-4">
+            {activities.map((log: any) => (
+                <div key={log.id} className="flex gap-3 text-sm">
+                     <div className="mt-0.5 h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                         <HistoryIcon className="h-3 w-3 text-muted-foreground" />
+                     </div>
+                     <div className="flex flex-col gap-0.5">
+                         <div className="flex items-center gap-2">
+                             <span className="font-semibold">{log.user?.firstName || 'System'}</span>
+                             <span className="text-xs text-muted-foreground">{format(new Date(log.createdAt), 'MMM d, h:mm a')}</span>
+                         </div>
+                         <p className="text-muted-foreground">
+                             {formatActivityMessage(log)}
+                         </p>
+                     </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function formatActivityMessage(log: any) {
+    switch (log.action) {
+        case 'task_created': return 'created this task';
+        case 'task_updated': return 'updated task details';
+        case 'task_assigned': return 'updated assignment';
+        case 'task_status_changed': return `changed status`;
+        default: return log.action.replace('_', ' ');
+    }
 }
