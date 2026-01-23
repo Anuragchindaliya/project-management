@@ -246,7 +246,7 @@ export class TaskController {
   async searchTasks(req: Request, res: Response) {
     try {
       const userId = req.user!.userId;
-      const { query, projectId, workspaceId, status, priority } = req.query;
+      const { query, projectId, workspaceId, status, priority, assigneeId } = req.query;
 
       const tasks = await taskService.searchTasks(userId, {
         query: query as string,
@@ -254,6 +254,7 @@ export class TaskController {
         workspaceId: workspaceId as string | undefined,
         status: status as string | undefined,
         priority: priority as string | undefined,
+        assigneeId: assigneeId as string | undefined,
       });
 
       return res.json({

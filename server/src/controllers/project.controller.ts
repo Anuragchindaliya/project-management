@@ -199,4 +199,33 @@ export class ProjectController {
       });
     }
   }
+
+  async getProjectsHealth(req: Request, res: Response) {
+    try {
+      const { workspaceId } = req.query;
+      const userId = req.user!.userId;
+
+      if (!workspaceId) {
+         return res.status(400).json({
+          success: false,
+          error: "Workspace ID is required",
+        });
+      }
+
+      const health = await projectService.getProjectsHealth(
+        workspaceId as string,
+        userId
+      );
+
+      return res.json({
+        success: true,
+        data: { health },
+      });
+    } catch (error) {
+       return res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch project health",
+      });
+    }
+  }
 }

@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/connection";
-import { projectMembers, projects, users } from "../db/schema";
+import { projectMembers, projects, users, tasks } from "../db/schema";
 import { ProjectRole } from "../types/rbac.types";
 import { RBACService } from "./rbac.service";
 
@@ -332,5 +332,66 @@ export class ProjectService {
 
       return { success: true };
     });
+  }
+
+  // ============================================
+  // GET PROJECTS HEALTH
+  // ============================================
+  async getProjectsHealth(workspaceId: string, userId: string) {
+    // Check access
+    const hasAccess = await rbacService.hasWorkspaceRole(
+      workspaceId,
+      userId,
+      "viewer" as any
+    );
+
+    if (!hasAccess) {
+      throw new Error("No access to this workspace");
+    }
+
+    // Get active projects in workspace
+    const activeProjects = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        key: projects.key,
+      })
+      .from(projects)
+      .where(
+        and(
+          eq(projects.workspaceId, workspaceId),
+          eq(projects.status, "active")
+        )
+      );
+
+    const healthMetrics = [];
+
+    for (const project of activeProjects) {
+       const stats = await db
+        .select({
+          status: tasks.status,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(tasks)
+        .where(eq(tasks.projectId, project.id))
+        .groupBy(tasks.status);
+
+      const total = stats.reduce((sum, s) => sum + s.count, 0);
+      const done = stats.find(s => s.status === 'done')?.count || 0;
+      
+      // Calculate percentage, default to 0 if no tasks
+      const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      healthMetrics.push({
+        projectId: project.id,
+        name: project.name,
+        key: project.key,
+        totalTasks: total,
+        completedTasks: done,
+        progress: percentage
+      });
+    }
+
+    return healthMetrics;
   }
 }

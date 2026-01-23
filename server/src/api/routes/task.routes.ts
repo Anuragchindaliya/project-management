@@ -55,4 +55,7 @@ router.get(
   taskController.getProjectStats
 );
 
+// Search Tasks (including Assigned To Me)
+router.get('/', taskController.searchTasks);
+
 export default router;

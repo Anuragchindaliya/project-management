@@ -36,6 +36,8 @@ router.get(
   projectController.getWorkspaceProjects
 );
 
+router.get('/health', projectController.getProjectsHealth);
+
 router.get('/:projectId', validateRequest(getProjectSchema), projectController.getProjectById);
 
 router.patch(

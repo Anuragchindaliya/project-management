@@ -54,6 +54,7 @@ export interface SearchFilters {
   workspaceId?: string;
   status?: string;
   priority?: string;
+  assigneeId?: string;
 }
 
 export class TaskService {
@@ -576,6 +577,11 @@ export class TaskService {
       conditions.push(eq(tasks.priority, filters.priority as any));
     }
 
+    // NEW: Filter by assigneeId
+    if (filters.assigneeId) {
+      conditions.push(eq(tasks.assigneeId, filters.assigneeId));
+    }
+
     let query = db
       .select({
         task: tasks,
@@ -585,9 +591,17 @@ export class TaskService {
           key: projects.key,
           workspaceId: projects.workspaceId,
         },
+        assignee: {
+          id: users.id,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          avatarUrl: users.avatarUrl,
+        }
       })
       .from(tasks)
-      .innerJoin(projects, eq(tasks.projectId, projects.id));
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(users, eq(tasks.assigneeId, users.id));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as any;
