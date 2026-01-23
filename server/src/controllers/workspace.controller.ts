@@ -115,6 +115,31 @@ export class WorkspaceController {
     }
   }
 
+  async inviteMember(req: Request, res: Response) {
+      try {
+          const { workspaceId } = req.params;
+          const { email, role } = req.body;
+          const inviterId = req.user!.userId;
+
+          if (!email) {
+              return res.status(400).json({ success: false, error: 'Email is required' });
+          }
+
+          const result = await workspaceService.inviteMember(workspaceId, email, role, inviterId);
+
+          return res.status(201).json({
+              success: true,
+              data: result,
+              message: result.status === 'added' ? 'Member added successfully' : 'Invitation sent successfully'
+          });
+      } catch (error) {
+          return res.status(400).json({
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to invite member'
+          });
+      }
+  }
+
   async updateMemberRole(req: Request, res: Response) {
     try {
       const { workspaceId, userId: targetUserId } = req.params;

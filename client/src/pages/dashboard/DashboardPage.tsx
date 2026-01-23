@@ -10,13 +10,24 @@ export function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await dashboardApi.getStats();
-        if (response.success && response.data) {
-          setStats(response.data);
+        const stats = await dashboardApi.getStats();
+        console.log({stats},"loadData")
+        // stats is DashboardStats directly now based on previous fix in api
+        // BUT `getStats` return type says `Promise<ApiResponse<DashboardStats>>`? 
+        // No, I changed it to return `response.data` which is `ApiResponse`?
+        // Wait, `response.data` of `axios.get<ApiResponse<T>>` IS `ApiResponse<T>`.
+        // So `getStats` returns `ApiResponse<DashboardStats>`.
+        // And `ApiResponse<T>` has `data: T`.
+        // So `stats` variable here is `ApiResponse<DashboardStats>`.
+        // So `stats.data` is `DashboardStats`.
+        // So `setStats(stats.data)` is correct.
+        
+        if (stats.success && stats.data) {
+          setStats(stats.data);
         }
       } catch (error) {
         console.error(error);

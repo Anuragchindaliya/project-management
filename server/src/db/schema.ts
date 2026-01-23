@@ -247,6 +247,36 @@ export const taskAttachments = mysqlTable(
 );
 
 // ============================================
+// INVITATIONS TABLE (New)
+// ============================================
+export const invitations = mysqlTable(
+  'invitations',
+  {
+    id: varchar('id', { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    email: varchar('email', { length: 255 }).notNull(),
+    workspaceId: varchar('workspace_id', { length: 36 })
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    role: mysqlEnum('role', ['admin', 'member', 'viewer']).notNull(),
+    token: varchar('token', { length: 255 }).notNull().unique(),
+    status: mysqlEnum('status', ['pending', 'accepted', 'expired']).default('pending').notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    invitedBy: varchar('invited_by', { length: 36 }).references(() => users.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    emailIdx: index('email_idx').on(table.email),
+    workspaceIdx: index('workspace_idx').on(table.workspaceId),
+    tokenIdx: uniqueIndex('token_idx').on(table.token),
+  })
+);
+
+// ============================================
 // ACTIVITY LOGS (Audit Trail)
 // ============================================
 export const activityLogs = mysqlTable(

@@ -6,6 +6,7 @@ import {
   taskComments,
   taskAttachments,
   users,
+  workspaceMembers,
   Task,
 } from '../db/schema';
 import { eq, and, desc, sql, like, or } from 'drizzle-orm';
@@ -137,6 +138,28 @@ export class TaskService {
 
       if (!canManage) {
         throw new Error('Insufficient permissions to update task');
+      }
+
+      // Check if new assignee is a member of the workspace
+      if (data.assigneeId && data.assigneeId !== currentTask.assigneeId) {
+          // Get workspace ID for the project
+          const [project] = await tx.select({ workspaceId: projects.workspaceId })
+              .from(projects)
+              .where(eq(projects.id, currentTask.projectId));
+          
+          if (!project) throw new Error('Project context not found');
+
+          // Check membership
+          const [membership] = await tx.select()
+              .from(workspaceMembers)
+              .where(and(
+                  eq(workspaceMembers.workspaceId, project.workspaceId),
+                  eq(workspaceMembers.userId, data.assigneeId)
+              ));
+          
+          if (!membership) {
+              throw new Error('Assignee is not a member of this workspace');
+          }
       }
 
       // Track changes for activity log
@@ -491,6 +514,7 @@ export class TaskService {
     const [taskWithUsers] = await db
       .select({
         task: tasks,
+        project: projects,
         assignee: {
           id: users.id,
           username: users.username,
@@ -501,6 +525,7 @@ export class TaskService {
       })
       .from(tasks)
       .leftJoin(users, eq(tasks.assigneeId, users.id))
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
       .where(eq(tasks.id, taskId));
 
     // Get reporter separately
@@ -544,6 +569,7 @@ export class TaskService {
 
     return {
       task: taskWithUsers.task,
+      project: taskWithUsers.project,
       assignee: taskWithUsers.assignee,
       reporter,
       comments,

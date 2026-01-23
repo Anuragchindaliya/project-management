@@ -1,42 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, FolderKanban, Clock } from 'lucide-react';
+import { Plus, FolderKanban, Clock, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { projectApi } from '@/entities/project/api/project.api';
-import { workspaceApi } from '@/entities/workspace/api/workspace.api';
-import { Project, Workspace } from '@/shared/types/drizzle.types';
 import { CreateProjectDialog } from '@/features/create/CreateProjectDialog';
+import { InviteMemberDialog } from '@/features/workspace/InviteMemberDialog';
 import { usePermissions } from '@/shared/hooks/usePermissions';
+import { useWorkspaceProjects } from '@/entities/project/api/useProjects';
+import { useWorkspaceById } from '@/entities/workspace/api/useWorkspaces';
 
 export function WorkspaceProjectsPage() {
   const { workspaceId } = useParams();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const { canCreateProject } = usePermissions();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!workspaceId) return;
-      setIsLoading(true);
-      try {
-        const [ws, projs] = await Promise.all([
-             workspaceApi.getWorkspaceById(workspaceId),
-             projectApi.getWorkspaceProjects(workspaceId)
-        ]);
-        setWorkspace(ws);
-        setProjects(projs);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [workspaceId]);
+  const { data: workspace, isLoading: isLoadingWorkspace } = useWorkspaceById(workspaceId || "");
+  const { data: projects = [], isLoading: isLoadingProjects } = useWorkspaceProjects(workspaceId || "");
+  
+  const isLoading = isLoadingWorkspace || isLoadingProjects;
 
   if (isLoading) {
       return <div className="p-8 flex items-center justify-center">Loading...</div>;
@@ -54,16 +37,31 @@ export function WorkspaceProjectsPage() {
             <p className="text-muted-foreground mt-1">Manage your projects and team members</p>
         </div>
         
-        {/* RBAC Hidden Button */}
-        {canCreateProject() && (
-            <CreateProjectDialog workspaceId={workspaceId}>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Project
-                </Button>
-            </CreateProjectDialog>
-        )}
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setInviteOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Invite Member
+            </Button>
+            
+            {/* RBAC Hidden Button */}
+            {canCreateProject() && (
+                <CreateProjectDialog workspaceId={workspaceId}>
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Project
+                    </Button>
+                </CreateProjectDialog>
+            )}
+        </div>
       </div>
+      
+      {workspaceId && (
+        <InviteMemberDialog 
+            workspaceId={workspaceId} 
+            open={inviteOpen} 
+            onOpenChange={setInviteOpen} 
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (

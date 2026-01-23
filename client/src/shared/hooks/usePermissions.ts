@@ -25,8 +25,14 @@ export function usePermissions() {
          return ['owner', 'admin'].includes(workspaceRole);
     };
 
+    const canManageMembers = (workspaceRole?: WorkspaceRole) => {
+        if (!workspaceRole) return false;
+        return ['owner', 'admin'].includes(workspaceRole);
+    };
+
     return {
         canCreateProject,
-        canDeleteProject
+        canDeleteProject,
+        canManageMembers
     };
 }

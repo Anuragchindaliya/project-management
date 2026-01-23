@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { useTaskDetails, useAddComment } from "@/entities/task/api/useTaskDetails";
+import { useTaskDetails, useAddComment, useAssignTask } from "@/entities/task/api/useTaskDetails";
+import { useWorkspaceMembers } from "@/entities/workspace/api/useWorkspaces";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
@@ -14,7 +15,11 @@ interface TaskDetailSheetProps {
 
 export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
     const { data: task, isLoading } = useTaskDetails(taskId);
+    // Fetch workspace members using the workspace ID from the task's project
+    const { data: members = [] } = useWorkspaceMembers(task?.project?.workspaceId || "");
+
     const { mutate: addComment, isPending: isAddingComment } = useAddComment();
+    const { mutate: assignTask, isPending: isAssigning } = useAssignTask();
     const [comment, setComment] = useState("");
 
     if (!taskId) return null;
@@ -24,6 +29,10 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
         addComment({ taskId, content: comment }, {
             onSuccess: () => setComment("")
         });
+    };
+
+    const handleAssign = (userId: string) => {
+        assignTask({ taskId, assigneeId: userId });
     };
 
     return (
@@ -63,10 +72,28 @@ export function TaskDetailSheet({ taskId, onClose }: TaskDetailSheetProps) {
                             <div className="flex flex-col gap-1">
                                 <span className="text-muted-foreground text-xs font-medium uppercase">Assignee</span>
                                 <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                                        {task.assignee?.firstName?.[0] || 'U'}
+                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs overflow-hidden">
+                                         {task.assignee?.avatarUrl ? (
+                                             <img src={task.assignee.avatarUrl} alt={task.assignee.firstName || 'User'} className="h-full w-full object-cover"/>
+                                         ) : (
+                                            <span>{task.assignee?.firstName?.[0] || 'U'}</span>
+                                         )}
                                     </div>
-                                    <span>{task.assignee?.firstName || 'Unassigned'}</span>
+                                    
+                                    <select 
+                                        className="bg-transparent border-none text-sm font-medium focus:ring-0 p-0 cursor-pointer hover:underline"
+                                        value={task.assigneeId || ""}
+                                        onChange={(e) => handleAssign(e.target.value)}
+                                        disabled={isAssigning}
+                                    >
+                                        <option value="" disabled>Unassigned</option>
+                                        {members.map((member: any) => (
+                                            <option key={member.userId} value={member.userId}>
+                                                {member.user.firstName} {member.user.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {isAssigning && <Loader2 className="h-3 w-3 animate-spin"/>}
                                 </div>
                             </div>
                              <div className="flex flex-col gap-1">

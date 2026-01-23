@@ -1,5 +1,5 @@
 import { db } from "../db/connection";
-import { workspaces, workspaceMembers, projects, users } from "../db/schema";
+import { workspaces, workspaceMembers, projects, users, invitations } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { RBACService } from "./rbac.service";
 
@@ -133,7 +133,86 @@ export class WorkspaceService {
   }
 
   // ============================================
-  // ADD WORKSPACE MEMBER
+  // INVITE WORKSPACE MEMBER (New Flow)
+  // ============================================
+  async inviteMember(
+    workspaceId: string,
+    email: string,
+    role: "admin" | "member" | "viewer",
+    inviterId: string
+  ) {
+    return await db.transaction(async (tx) => {
+        // Check permissions
+        const hasPermission = await rbacService.hasWorkspaceRole(
+            workspaceId,
+            inviterId,
+            "admin" as any
+        );
+
+        if (!hasPermission) {
+            throw new Error("Insufficient permissions to invite members");
+        }
+
+        // 1. Check if user exists
+        const [existingUser] = await tx
+            .select()
+            .from(users)
+            .where(eq(users.email, email));
+
+        if (existingUser) {
+            // 2a. If user exists, add directly (if not already member)
+            const [existingMember] = await tx
+                .select()
+                .from(workspaceMembers)
+                .where(
+                    and(
+                        eq(workspaceMembers.workspaceId, workspaceId),
+                        eq(workspaceMembers.userId, existingUser.id)
+                    )
+                );
+            
+            if (existingMember) {
+                throw new Error("User is already a workspace member");
+            }
+
+            // Add to workspace
+            await tx.insert(workspaceMembers).values({
+                workspaceId,
+                userId: existingUser.id,
+                role,
+                invitedBy: inviterId
+            });
+
+            return { status: 'added', userId: existingUser.id };
+        } else {
+            // 2b. If user does not exist, create invitation
+            // Check if invite already exists
+            /*
+            // Optional: check for existing pending invite? 
+            // For now, let's allow re-inviting or simple error.
+            */
+            
+            // Create invitation
+             await tx.insert(invitations).values({
+                workspaceId,
+                email,
+                role,
+                token: crypto.randomUUID(), // Simple token for now
+                invitedBy: inviterId,
+                status: 'pending',
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+            });
+
+            // TODO: Send Email here (mocked for now)
+            console.log(`[Email Mock] Invitation sent to ${email} for workspace ${workspaceId}`);
+
+            return { status: 'invited', email };
+        }
+    });
+  }
+
+  // ============================================
+  // ADD WORKSPACE MEMBER (Internal / Direct ID)
   // ============================================
   async addWorkspaceMember(
     workspaceId: string,

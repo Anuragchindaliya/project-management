@@ -54,6 +54,12 @@ router.post(
 );
 
 router.get(
+  '/:projectId/stats',
+  validateRequest(getProjectTasksSchema),
+  taskController.getProjectStats
+);
+
+router.get(
   '/:projectId/tasks',
   validateRequest(getProjectTasksSchema),
   taskController.getProjectTasks

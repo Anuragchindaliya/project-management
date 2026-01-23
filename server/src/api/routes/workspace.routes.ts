@@ -60,6 +60,14 @@ router.post(
   workspaceController.addMember
 );
 
+router.post(
+  '/:workspaceId/members/invite',
+  requireWorkspacePermission('canManageMembers'),
+  // Validate invite schema (need to import or create)
+  // For now using manual validation or same schema if compatible
+  workspaceController.inviteMember
+);
+
 router.patch(
   '/:workspaceId/members/:userId',
   requireWorkspacePermission('canManageMembers'),

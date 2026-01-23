@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workspaceApi, CreateWorkspaceDTO } from './workspace.api';
+import apiClient from '@/shared/api/client';
 
 export const workspaceKeys = {
   all: ['workspaces'] as const,
@@ -34,5 +35,25 @@ export function useCreateWorkspace() {
       // Optionally set cache for detail immediately
       queryClient.setQueryData(workspaceKeys.detail(newWorkspace.id), newWorkspace);
     },
+  });
+}
+
+export function useWorkspaceMembers(workspaceId: string) {
+  return useQuery({
+    queryKey: [...workspaceKeys.detail(workspaceId), 'members'],
+    queryFn: () => workspaceApi.getWorkspaceMembers(workspaceId),
+    enabled: !!workspaceId,
+  });
+}
+
+export function useInviteMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ workspaceId, email, role }: { workspaceId: string; email: string; role: 'admin' | 'member' | 'viewer' }) =>
+      apiClient.post(`/workspaces/${workspaceId}/members/invite`, { email, role }).then(res => res.data.data),
+    onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({ queryKey: [...workspaceKeys.detail(variables.workspaceId), 'members'] });
+    }
   });
 }

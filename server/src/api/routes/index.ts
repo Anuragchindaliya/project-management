@@ -4,6 +4,7 @@ import workspaceRoutes from './workspace.routes';
 import projectRoutes from './project.routes';
 import taskRoutes from './task.routes';
 import commentRoutes from './comment.routes';
+import dashboardRoutes from './dashboard.routes';
 // import attachmentRoutes from './attachment.routes';
 // import activityRoutes from './activity.routes';
 
@@ -25,6 +26,7 @@ router.use('/workspaces', workspaceRoutes);
 router.use('/projects', projectRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/comments', commentRoutes);
+router.use('/dashboard', dashboardRoutes);
 // router.use('/attachments', attachmentRoutes);
 // router.use('/activity', activityRoutes);
 

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { useState } from 'react';
 import { useCreateProject } from '@/entities/project/api/useProjects';
+import { Textarea } from '@/components/ui/textarea';
 
 const projectSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -99,7 +100,7 @@ export function CreateProjectDialog({ children, workspaceId }: { children: React
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Input
+            <Textarea
               id="description"
               placeholder="Optional description"
               {...register('description')}
