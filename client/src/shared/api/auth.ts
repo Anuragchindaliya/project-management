@@ -8,6 +8,13 @@ export interface User {
   firstName: string;
   lastName: string;
   avatarUrl?: string;
+  workspaceMemberships?: {
+    workspaceId: string;
+    role: 'owner' | 'admin' | 'member' | 'viewer';
+  }[];
+}
+export interface MeResponse {
+  user: User;
 }
 
 export interface LoginResponse {
@@ -34,8 +41,8 @@ export const authApi = {
     return response.data;
   },
 
-  me: async (): Promise<ApiResponse<User>> => {
-    const response = await apiClient.get<ApiResponse<User>>('/auth/me');
+  me: async (): Promise<ApiResponse<MeResponse>> => {
+    const response = await apiClient.get<ApiResponse<MeResponse>>('/auth/me');
     return response.data;
   },
 };

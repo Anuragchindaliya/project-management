@@ -98,15 +98,20 @@ export function WorkspaceProjectsPage() {
         ))}
         
         {projects.length === 0 && (
-            <div className="col-span-full py-12 flex flex-col items-center justify-center text-center border-2 border-dashed rounded-xl bg-muted/50">
-                <FolderKanban className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">No projects yet</h3>
-                <p className="text-muted-foreground mb-4 max-w-sm">
-                    Get started by creating your first project in this workspace.
+            <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed rounded-xl bg-gradient-to-br from-muted/50 via-muted/30 to-background/10">
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 ring-8 ring-primary/5">
+                    <FolderKanban className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold tracking-tight mb-2">No projects created yet</h3>
+                <p className="text-muted-foreground mb-8 max-w-[400px] text-lg">
+                    This workspace is empty. Create your first project to start tracking tasks and managing your team's work.
                 </p>
                 {canCreateProject() && (
                     <CreateProjectDialog workspaceId={workspaceId}>
-                        <Button variant="outline">Create Project</Button>
+                        <Button size="lg" className="h-12 px-8 font-medium shadow-lg hover:shadow-primary/25 transition-all">
+                            <Plus className="mr-2 h-5 w-5" />
+                            Create New Project
+                        </Button>
                     </CreateProjectDialog>
                 )}
             </div>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryProvider } from './app/providers/QueryProvider';
 import { AuthProvider, useAuth } from './app/providers/AuthProvider';
 import { ThemeProvider } from './features/theme/ThemeProvider';
@@ -12,25 +12,37 @@ import { TasksPage } from './pages/tasks/TasksPage';
 import { InboxPage } from './pages/inbox/InboxPage';
 import { WorkspaceProjectsPage } from './pages/workspaces/WorkspaceProjectsPage';
 import { LandingPage } from './pages/landing/LandingPage';
-// ... (omitting imports for brevity if possible, or just replacing imports block?)
-// I need to add import at top and replace route at bottom.
-// I will do two chunks or use multi_replace. Or replace entire content if small enough? 90 lines.
-// I'll stick to replace_file_content for imports FIRST using Context? No, "Instruction" handles logic but here I should provide exact Replacement.
-// I'll use multi_replace or carefully crafted replace.
-// Let's use multi_replace to be safe with multiple edits.
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { WorkspaceMembersPage } from './pages/workspaces/WorkspaceMembersPage';
+import { socketService } from '@/shared/api/socket';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
-  
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+        socketService.connect();
+    } else {
+        socketService.disconnect();
+    }
+  }, [user]);
+
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
   
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  return children;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -64,9 +76,11 @@ function AppContent() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         
         {/* Workspace Routes */}
         <Route path="/workspaces/:workspaceId" element={<WorkspaceProjectsPage />} />
+        <Route path="/workspaces/:workspaceId/members" element={<WorkspaceMembersPage />} />
         
         {/* Global/All Projects and Tasks */}
         <Route path="/projects" element={<ProjectsPage />} />

@@ -10,6 +10,13 @@ export interface JWTPayload {
   userId: string;
   email: string;
   username: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  workspaceMemberships: {
+    workspaceId: string;
+    role: "owner" | "admin" | "member" | "viewer";
+  }[];
 }
 
 export const generateAccessToken = (payload: JWTPayload): string => {

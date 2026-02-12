@@ -25,7 +25,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const response = await authApi.me();
         if (response.success && response.data) {
-          setUser(response.data);
+          console.log({response});
+          setUser(response.data?.user);
         } else {
           clearUser();
         }

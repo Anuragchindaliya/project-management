@@ -4,6 +4,7 @@ import { db } from '../db/connection';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { generateAccessToken, generateRefreshToken, JWTPayload } from '../utils/jwt.util';
 
 const authService = new AuthService();
 
@@ -114,9 +115,9 @@ export class AuthController {
 
   async me(req: Request, res: Response) {
     try {
-      const userId = req.user!.userId;
-
-      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      // The user is already attached to the request by the auth middleware
+      // and contains the data from the JWT (including workspaceMemberships)
+      const user = req.user as any;
 
       if (!user) {
         return res.status(404).json({
@@ -129,15 +130,13 @@ export class AuthController {
         success: true,
         data: {
           user: {
-            id: user.id,
+            id: user.userId,
             email: user.email,
             username: user.username,
             firstName: user.firstName,
             lastName: user.lastName,
             avatarUrl: user.avatarUrl,
-            isActive: user.isActive,
-            lastLoginAt: user.lastLoginAt,
-            createdAt: user.createdAt,
+            workspaceMemberships: user.workspaceMemberships || [],
           },
         },
       });
@@ -151,6 +150,7 @@ export class AuthController {
 
   async updateProfile(req: Request, res: Response) {
     try {
+      // @ts-ignore
       const userId = req.user!.userId;
       const { firstName, lastName, avatarUrl } = req.body;
 
@@ -164,11 +164,53 @@ export class AuthController {
         })
         .where(eq(users.id, userId));
 
-      const [updatedUser] = await db.select().from(users).where(eq(users.id, userId));
+      // Fetch fresh user data with membersips to generate new token
+      const updatedUser = await db.query.users.findFirst({
+         where: eq(users.id, userId),
+         with: {
+            workspaceMemberships: true
+         }
+      });
+
+      if (!updatedUser) throw new Error("User not found");
+
+      // Generate items for new token
+      const payload: JWTPayload = {
+        userId: updatedUser.id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        firstName: updatedUser.firstName || undefined,
+        lastName: updatedUser.lastName || undefined,
+        avatarUrl: updatedUser.avatarUrl || undefined,
+        workspaceMemberships: updatedUser.workspaceMemberships.map(m => ({
+            workspaceId: m.workspaceId,
+            role: m.role
+        }))
+      };
+
+      const accessToken = generateAccessToken(payload);
+      
+      // Update cookie
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000,
+      });
 
       return res.json({
         success: true,
-        data: { user: updatedUser },
+        data: { 
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                username: updatedUser.username,
+                firstName: updatedUser.firstName,
+                lastName: updatedUser.lastName,
+                avatarUrl: updatedUser.avatarUrl,
+                workspaceMemberships: payload.workspaceMemberships
+            } 
+        },
       });
     } catch (error) {
       return res.status(400).json({

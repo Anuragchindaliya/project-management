@@ -19,10 +19,15 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     // Attach user to request
     // @ts-ignore
+    // @ts-ignore
     req.user = {
       userId: payload.userId,
       email: payload.email,
       username: payload.username,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      avatarUrl: payload.avatarUrl,
+      workspaceMemberships: payload.workspaceMemberships,
     };
 
     next();

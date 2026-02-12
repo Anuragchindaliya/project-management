@@ -107,17 +107,16 @@ export function WorkspaceSettingsDialog({ open, onOpenChange, children }: Worksp
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : (
-                        members.map((member: any) => (
-                            <div key={member.id} className="flex items-center justify-between gap-4">
+                        members.map((member) => (
+                            <div key={member.user.id} className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
                                     <Avatar>
-                                        <AvatarImage src={member.user.avatarUrl} />
-                                        <AvatarFallback>{member.user.firstName?.[0]}</AvatarFallback>
+                                        {member.user.avatarUrl ? <AvatarImage src={member.user.avatarUrl} /> : <AvatarFallback>{member.user.firstName[0]}</AvatarFallback>}
                                     </Avatar>
                                     <div>
                                         <div className="font-medium text-sm">
                                             {member.user.firstName} {member.user.lastName}
-                                            {member.user.id === member.workspace?.ownerId && <span className="ml-2 text-xs text-muted-foreground">(Owner)</span>}
+                                            {member.user.id === member.member?.userId && <span className="ml-2 text-xs text-muted-foreground">(Owner)</span>}
                                         </div>
                                         <div className="text-xs text-muted-foreground">{member.user.email}</div>
                                     </div>
@@ -126,8 +125,8 @@ export function WorkspaceSettingsDialog({ open, onOpenChange, children }: Worksp
                                 {canManageMembers() ? (
                                     <div className="flex items-center gap-2">
                                         <Select 
-                                            defaultValue={member.role} 
-                                            onValueChange={(val) => handleRoleChange(member.userId, val)}
+                                            defaultValue={member.member.role} 
+                                            onValueChange={(val) => handleRoleChange(member.member.userId, val)}
                                             disabled={isUpdating}
                                         >
                                             <SelectTrigger className="w-[110px] h-8 text-xs">
@@ -143,7 +142,7 @@ export function WorkspaceSettingsDialog({ open, onOpenChange, children }: Worksp
                                             variant="ghost" 
                                             size="icon" 
                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                            onClick={() => handleRemoveMember(member.userId)}
+                                            onClick={() => handleRemoveMember(member.member.userId)}
                                             disabled={isRemoving}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -151,7 +150,7 @@ export function WorkspaceSettingsDialog({ open, onOpenChange, children }: Worksp
                                     </div>
                                 ) : (
                                     <span className="text-xs text-muted-foreground capitalize border px-2 py-1 rounded">
-                                        {member.role}
+                                        {member.member.role}
                                     </span>
                                 )}
                             </div>

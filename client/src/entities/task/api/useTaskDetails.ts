@@ -123,9 +123,55 @@ export function useAssignTask() {
   return useMutation({
     mutationFn: ({ taskId, assigneeId }: { taskId: string; assigneeId: string }) => 
       taskDetailApi.assignTask(taskId, assigneeId),
-    onSuccess: (_updatedTask, variables) => {
+    onMutate: async ({ taskId, assigneeId }) => {
+        // 1. Cancel related queries
+        await queryClient.cancelQueries({ queryKey: taskKeys.detail(taskId) });
+        
+        // 2. Snapshot previous values
+        const previousTask = queryClient.getQueryData<TaskResponse>(taskKeys.detail(taskId));
+        const previousProjectTasks = previousTask 
+            ? queryClient.getQueryData<any[]>(taskKeys.project(previousTask.projectId))
+            : undefined;
+
+        // 3. Optimistically update Task Detail
+        if (previousTask) {
+             queryClient.setQueryData(taskKeys.detail(taskId), (old: any) => ({
+                 ...old,
+                 assigneeId, 
+                 // We can't easily update the full 'assignee' object without user details, 
+                 // but we can update the ID which might be enough for some UI, 
+                 // or we accept we might show a loader or stale avatar for a split second 
+                 // until the real data comes back.
+                 // Ideally we'd have the assignee object passed in, but we only have ID.
+                 // For now, let's just update assigneeId. UI might need check.
+             }));
+        }
+
+        // 4. Optimistically update Project Board (if we found the project ID)
+        if (previousTask && previousProjectTasks) {
+             queryClient.cancelQueries({ queryKey: taskKeys.project(previousTask.projectId) });
+             queryClient.setQueryData(taskKeys.project(previousTask.projectId), (old: any[]) => {
+                 return old.map(t => t.id === taskId ? { ...t, assigneeId } : t);
+             });
+        }
+
+        return { previousTask, previousProjectTasks, projectId: previousTask?.projectId };
+    },
+
+    onError: (_err, _vars, context) => {
+        if (context?.previousTask) {
+            queryClient.setQueryData(taskKeys.detail(context.previousTask.id), context.previousTask);
+        }
+        if (context?.previousProjectTasks && context.projectId) {
+            queryClient.setQueryData(taskKeys.project(context.projectId), context.previousProjectTasks);
+        }
+    },
+
+    onSettled: (_data, _error, variables, context) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.project(_updatedTask.projectId) });
+      if (context?.projectId) {
+         queryClient.invalidateQueries({ queryKey: taskKeys.project(context.projectId) });
+      }
     },
   });
 }

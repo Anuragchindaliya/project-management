@@ -5,7 +5,12 @@ export interface UserPayload {
   email: string;
   username: string;
 
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+
   // OPTIONAL FIELDS that RBAC middleware will add dynamically
+  workspaceMemberships?: { workspaceId: string; role: "owner" | "admin" | "member" | "viewer" }[];
   workspaceRole?: WorkspaceRole;
   projectRole?: ProjectRole;
 }

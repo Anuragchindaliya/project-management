@@ -63,16 +63,12 @@ export function Sidebar({ className }: { className?: string }) {
   const pathWorkspaceId = location.pathname.match(/\/workspaces\/([^\/]+)/)?.[1];
   
   useEffect(() => {
-    if (pathWorkspaceId) {
+    if (pathWorkspaceId && pathWorkspaceId !== activeWorkspaceId) {
       setActiveWorkspace(pathWorkspaceId);
-    } else if (!activeWorkspaceId && workspaces.length > 0) {
-       // Default to first workspace if none active
-       // Optional: Don't force navigation, just set ID context if we can.
-       // But if we are at /dashboard, maybe we want 'personal' or 'all'?
-       // For now, let's just default to first if user has one.
+    } else if (!activeWorkspaceId && !pathWorkspaceId && workspaces.length > 0) {
        setActiveWorkspace(workspaces[0].workspace.id);
     }
-  }, [pathWorkspaceId, workspaces, activeWorkspaceId, setActiveWorkspace]);
+  }, [pathWorkspaceId, activeWorkspaceId, setActiveWorkspace, workspaces]);
 
 
   const activeWorkspace = workspaces.find(w => w.workspace.id === activeWorkspaceId)?.workspace;
@@ -87,6 +83,7 @@ export function Sidebar({ className }: { className?: string }) {
       setActiveWorkspace(id);
       navigate(`/workspaces/${id}`);
   };
+
 
   return (
     <div className={cn("flex flex-col h-screen border-r bg-muted/10 pb-4 w-[280px]", className)}>
@@ -232,11 +229,20 @@ export function Sidebar({ className }: { className?: string }) {
                          <Button 
                             variant="ghost" 
                             className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
-                            onClick={() => setInviteOpen(true)}
+                            onClick={() => navigate(`/workspaces/${activeWorkspaceId}/members`)}
                         >
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Invite Members
+                            Members
                          </Button>
+                         
+                          <Button 
+                             variant="ghost" 
+                             className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
+                             onClick={() => setInviteOpen(true)}
+                         >
+                             <Plus className="mr-2 h-4 w-4" />
+                             Invite New
+                          </Button>
                          
                          <WorkspaceSettingsDialog>
                             <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground">
@@ -268,7 +274,11 @@ export function Sidebar({ className }: { className?: string }) {
                      <DropdownMenuContent align="end">
                          <DropdownMenuLabel>My Account</DropdownMenuLabel>
                          <DropdownMenuSeparator />
-                         <DropdownMenuItem>Profile</DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => navigate('/profile')}>
+                            <div className="flex items-center">
+                                <span className="mr-2">Profile</span> 
+                            </div>
+                         </DropdownMenuItem>
                          <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                                 <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

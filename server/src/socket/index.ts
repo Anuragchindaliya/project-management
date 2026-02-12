@@ -21,8 +21,16 @@ export function initializeSocketIO(httpServer: HTTPServer) {
   // Authentication middleware
   io.use((socket, next) => {
     try {
-      // Get token from handshake auth or query
-      const token = socket.handshake.auth.token || socket.handshake.query.token;
+      // Get token from handshake auth or query or cookies
+      let token = socket.handshake.auth.token || socket.handshake.query.token;
+
+      if (!token && socket.handshake.headers.cookie) {
+        const cookies = socket.handshake.headers.cookie.split(';');
+        const accessTokenCookie = cookies.find(c => c.trim().startsWith('accessToken='));
+        if (accessTokenCookie) {
+            token = accessTokenCookie.split('=')[1];
+        }
+      }
 
       if (!token) {
         return next(new Error("Authentication token required"));

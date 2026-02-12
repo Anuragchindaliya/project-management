@@ -32,17 +32,28 @@ export class AuthService {
       })
       .$returningId();
 
-    // Fetch created user
-    const [createdUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, user.id));
+    // Fetch created user with memberships (likely empty, but good practice)
+    const createdUser = await db.query.users.findFirst({
+      where: eq(users.id, user.id),
+      with: {
+        workspaceMemberships: true,
+      },
+    });
+
+    if (!createdUser) throw new Error("User creation failed");
 
     // Generate tokens
     const payload: JWTPayload = {
       userId: createdUser.id,
       email: createdUser.email,
       username: createdUser.username,
+      firstName: createdUser.firstName || undefined,
+      lastName: createdUser.lastName || undefined,
+      avatarUrl: createdUser.avatarUrl || undefined,
+      workspaceMemberships: createdUser.workspaceMemberships.map((m) => ({
+        workspaceId: m.workspaceId,
+        role: m.role,
+      })),
     };
 
     const accessToken = generateAccessToken(payload);
@@ -53,8 +64,10 @@ export class AuthService {
         id: createdUser.id,
         email: createdUser.email,
         username: createdUser.username,
-        firstName: createdUser.firstName,
-        lastName: createdUser.lastName,
+        firstName: createdUser.firstName || "",
+        lastName: createdUser.lastName || "",
+        avatarUrl: createdUser.avatarUrl || undefined,
+        workspaceMemberships: payload.workspaceMemberships,
       },
       accessToken,
       refreshToken,
@@ -62,8 +75,13 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    // Find user
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    // Find user with memberships
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+      with: {
+        workspaceMemberships: true,
+      },
+    });
 
     if (!user) {
       throw new Error("Invalid credentials");
@@ -87,6 +105,13 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       username: user.username,
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+      workspaceMemberships: user.workspaceMemberships.map((m) => ({
+        workspaceId: m.workspaceId,
+        role: m.role,
+      })),
     };
 
     const accessToken = generateAccessToken(payload);
@@ -97,8 +122,10 @@ export class AuthService {
         id: user.id,
         email: user.email,
         username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        avatarUrl: user.avatarUrl || undefined,
+        workspaceMemberships: payload.workspaceMemberships,
       },
       accessToken,
       refreshToken,
@@ -108,21 +135,30 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     const payload = verifyRefreshToken(refreshToken);
 
-    // Verify user still exists
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, payload.userId));
+    // Verify user still exists and fetch fresh data
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, payload.userId),
+      with: {
+        workspaceMemberships: true,
+      },
+    });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Generate new access token
+    // Generate new access token with fresh data
     const newPayload: JWTPayload = {
       userId: user.id,
       email: user.email,
       username: user.username,
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+      workspaceMemberships: user.workspaceMemberships.map((m) => ({
+        workspaceId: m.workspaceId,
+        role: m.role,
+      })),
     };
 
     const accessToken = generateAccessToken(newPayload);
