@@ -11,7 +11,7 @@ export function useTaskSocketEvents(projectId?: string) {
         if (!socket || !projectId) return;
 
         // Join project room
-        socket.emit('join:project', projectId);
+        socket.emit('join_project', { projectId });
 
         const handleTaskUpdated = (updatedTask: any) => {
             // Update cache for this task
@@ -38,7 +38,7 @@ export function useTaskSocketEvents(projectId?: string) {
         // socket.on('tasks:bulk_updated', ...)
 
         return () => {
-             socket.emit('leave:project', projectId);
+             socket.emit('leave_project', { projectId });
              socket.off('task:updated', handleTaskUpdated);
              socket.off('task:created', handleTaskCreated);
         };

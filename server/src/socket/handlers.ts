@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { RBACService } from "../services/rbac.service";
 
 const rbacService = new RBACService();
+const activeCalls = new Set<string>();
 
 export function registerSocketHandlers(io: SocketIOServer, socket: Socket) {
   const userId = socket.data.userId;
@@ -93,10 +94,11 @@ export function registerSocketHandlers(io: SocketIOServer, socket: Socket) {
         projectId,
       });
 
-      // Send active users list to the joining user
+      // Send active users list AND call status
       socket.emit("project_joined", {
         projectId,
         activeUsers,
+        isCallActive: activeCalls.has(projectId)
       });
     } catch (error) {
       console.error("Error joining project:", error);
@@ -196,5 +198,92 @@ export function registerSocketHandlers(io: SocketIOServer, socket: Socket) {
     });
 
     console.log(`👤 User ${userId} status changed to ${data.status}`);
+  });
+
+  // ============================================
+  // VIDEO CALL EVENTS
+  // ============================================
+
+  socket.on("join_call", async (data: { projectId: string }) => {
+    try {
+      const { projectId } = data;
+
+      // Verify user has access to project
+      const hasAccess = await rbacService.canAccessProject(projectId, userId);
+
+      if (!hasAccess) {
+        socket.emit("error", { message: "No access to this project" });
+        return;
+      }
+
+      // Join call room
+      socket.join(`call:${projectId}`);
+      activeCalls.add(projectId);
+
+      // Notify others in the call
+      socket.to(`call:${projectId}`).emit("user_joined_call", {
+        userId,
+        username: socket.data.username,
+        socketId: socket.id,
+      });
+
+      // Broadcast to project that call is active
+      io.to(`project:${projectId}`).emit("call_status_update", {
+        projectId,
+        isActive: true
+      });
+
+      console.log(`📞 User ${userId} joined call in project:${projectId}`);
+    } catch (error) {
+      console.error("Error joining call:", error);
+      socket.emit("error", { message: "Failed to join call" });
+    }
+  });
+
+  socket.on("leave_call", (data: { projectId: string }) => {
+    const { projectId } = data;
+    socket.leave(`call:${projectId}`);
+
+    socket.to(`call:${projectId}`).emit("user_left_call", {
+      userId,
+      username: socket.data.username,
+    });
+    
+    // Check if call room is empty
+    const room = io.sockets.adapter.rooms.get(`call:${projectId}`);
+    if (!room || room.size === 0) {
+        activeCalls.delete(projectId);
+        io.to(`project:${projectId}`).emit("call_status_update", {
+            projectId,
+            isActive: false
+        });
+    }
+
+    console.log(`📞 User ${userId} left call in project:${projectId}`);
+  });
+
+  socket.on("usage_offer", (data: { offer: any; to: string }) => {
+    socket.to(data.to).emit("usage_offer", {
+      offer: data.offer,
+      from: socket.id,
+      userId: userId,
+      username: socket.data.username,
+    });
+  });
+
+  socket.on("usage_answer", (data: { answer: any; to: string }) => {
+    socket.to(data.to).emit("usage_answer", {
+      answer: data.answer,
+      from: socket.id,
+      userId: userId,
+      username: socket.data.username,
+    });
+  });
+
+  socket.on("ice_candidate", (data: { candidate: any; to: string }) => {
+    socket.to(data.to).emit("ice_candidate", {
+      candidate: data.candidate,
+      from: socket.id,
+    });
   });
 }

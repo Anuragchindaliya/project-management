@@ -3,6 +3,7 @@ import { CreateProjectDialog } from "@/features/create/CreateProjectDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/shared/hooks/usePermissions";
+import { VideoCallFeature } from "@/features/video/VideoCallFeature";
 
 export function ProjectsPage() {
     const { canCreateProject } = usePermissions();
@@ -11,6 +12,9 @@ export function ProjectsPage() {
       <div className="flex items-center justify-between px-4">
         <h1 className="text-2xl font-bold tracking-tight">Board</h1>
         <div className="flex gap-2">
+            {/* Video Call Feature */}
+            <VideoCallFeature />
+            
             {/* Project switcher or filter could go here */}
             {/* check the permission to create a project */}
             {canCreateProject() && (
