@@ -114,29 +114,6 @@ export interface TaskResponse {
     assignee: User | null;
 }
 
-const data = [
-    {
-        "task": {
-            "id": "29dda509-d53c-4d23-a224-270b188d887d",
-            "projectId": "9f028316-e867-4cf0-8576-4eca59d6680f",
-            "title": "Initial setup",
-            "description": "Make the initial setup with necessary dependencies",
-            "taskNumber": 1,
-            "status": "todo",
-            "priority": "medium",
-            "assigneeId": null,
-            "reporterId": "e15e95ee-55dc-4eeb-a110-16db740abd39",
-            "parentTaskId": null,
-            "estimatedHours": null,
-            "actualHours": null,
-            "dueDate": null,
-            "completedAt": null,
-            "createdAt": "2026-01-23T13:52:36.000Z",
-            "updatedAt": "2026-01-23T13:52:36.000Z"
-        },
-        "assignee": null
-    }
-]
 
 export interface TaskComment {
     id: string;

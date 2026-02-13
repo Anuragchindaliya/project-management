@@ -17,7 +17,10 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socket) {
-        socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
+        // Use relative path so it goes through Vite proxy (which goes to localhost:3000)
+        // This allows mobile devices connecting to IP:5173 to connect to the socket
+        const url = import.meta.env.VITE_SOCKET_URL || undefined;
+        socket = io(url, {
             withCredentials: true,
         });
     }

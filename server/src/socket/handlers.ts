@@ -240,6 +240,13 @@ export function registerSocketHandlers(io: SocketIOServer, socket: Socket) {
     }
   });
 
+  socket.on("get_call_status", (data: { projectId: string }) => {
+     socket.emit("call_status_update", {
+         projectId: data.projectId,
+         isActive: activeCalls.has(data.projectId)
+     });
+  });
+
   socket.on("leave_call", (data: { projectId: string }) => {
     const { projectId } = data;
     socket.leave(`call:${projectId}`);
@@ -284,6 +291,34 @@ export function registerSocketHandlers(io: SocketIOServer, socket: Socket) {
     socket.to(data.to).emit("ice_candidate", {
       candidate: data.candidate,
       from: socket.id,
+    });
+  });
+
+  socket.on("disconnecting", () => {
+    const rooms = Array.from(socket.rooms);
+    rooms.forEach((room) => {
+        if (room.startsWith("call:")) {
+            const projectId = room.split(":")[1];
+            
+            // Notify others in call
+            socket.to(room).emit("user_left_call", {
+                userId,
+                username: socket.data.username
+            });
+            
+            // Check if room will be empty after this socket leaves
+            // socket.rooms contains the rooms BEFORE disconnect
+            const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+            // If size is 1, it's just this user, so it will be empty
+            if (roomSize <= 1) {
+                activeCalls.delete(projectId);
+                io.to(`project:${projectId}`).emit("call_status_update", {
+                    projectId,
+                    isActive: false
+                });
+                console.log(`📞 Call ended in project:${projectId} due to disconnect`);
+            }
+        }
     });
   });
 }

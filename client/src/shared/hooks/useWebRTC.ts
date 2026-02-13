@@ -257,6 +257,8 @@ export const useWebRTC = ({ projectId }: WebRTCProps) => {
             // For now, if we have 0 peers, clear remote
             if (peersRef.current.size === 0) {
                 setRemoteStream(null);
+                // Force video element to re-render if needed?
+                // Usually null state is enough.
             }
         }
     };

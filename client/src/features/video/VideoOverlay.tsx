@@ -149,7 +149,13 @@ export const VideoOverlay = ({ projectId, userId, isOpen, onClose }: VideoOverla
               variant={isScreenSharing ? "default" : "secondary"}
               size="icon"
               className="rounded-full h-12 w-12"
-              onClick={() => shareScreen()}
+              onClick={() => {
+                  if (typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+                      alert("Screen sharing is not supported by your mobile browser.");
+                      return;
+                  }
+                  shareScreen();
+              }}
             >
               <Monitor className="h-5 w-5" />
             </Button>

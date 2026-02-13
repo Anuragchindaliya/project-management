@@ -31,6 +31,9 @@ export const VideoCallFeature = () => {
         socket.on('call_status_update', handleCallStatus);
         socket.on('project_joined', handleProjectJoined);
 
+        // Fetch initial status explicitly to avoid race conditions with room joining
+        socket.emit("get_call_status", { projectId });
+
         return () => {
             socket.off('call_status_update', handleCallStatus);
             socket.off('project_joined', handleProjectJoined);
