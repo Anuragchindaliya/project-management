@@ -22,12 +22,35 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+/**
+ * Sets the base URL for the API client.
+ * Useful for mobile apps where the base URL might change based on the environment.
+ * @param url The new base URL
+ */
+export const setBaseURL = (url: string) => {
+  apiClient.defaults.baseURL = url;
+};
+
+
+/**
+ * Sets the authorization token for the API client.
+ * @param token The JWT token
+ */
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+  }
+};
+
 // Request interceptor (can be used for adding auth tokens if needed)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Add any request modifications here if needed
     return config;
   },
+
   (error: AxiosError) => {
     return Promise.reject(error);
   }

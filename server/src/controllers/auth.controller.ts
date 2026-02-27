@@ -29,7 +29,7 @@ export class AuthController {
 
       return res.status(201).json({
         success: true,
-        data: { user: result.user },
+        data: { user: result.user, token: result.accessToken },
       });
     } catch (error) {
       return res.status(400).json({
@@ -61,7 +61,7 @@ export class AuthController {
       return res.json({
         success: true,
         statusCode: 200,
-        data: { user: result.user },
+        data: { user: result.user, token: result.accessToken },
       });
     } catch (error) {
       return res.status(401).json({
@@ -209,7 +209,8 @@ export class AuthController {
                 lastName: updatedUser.lastName,
                 avatarUrl: updatedUser.avatarUrl,
                 workspaceMemberships: payload.workspaceMemberships
-            } 
+            },
+            token: accessToken
         },
       });
     } catch (error) {

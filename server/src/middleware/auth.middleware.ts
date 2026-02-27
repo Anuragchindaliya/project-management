@@ -4,10 +4,18 @@ import jwt from 'jsonwebtoken';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Get token from HttpOnly cookie
-    const accessToken = req.cookies.accessToken;
+    // Get token from HttpOnly cookie or Authorization header
+    let accessToken = req.cookies.accessToken;
+
+    if (!accessToken && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        accessToken = authHeader.substring(7);
+      }
+    }
 
     if (!accessToken) {
+
       return res.status(401).json({
         success: false,
         error: 'Authentication required',
