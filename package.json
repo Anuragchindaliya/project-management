@@ -1,0 +1,17 @@
+{
+  "name": "project-management-platform-monorepo",
+  "private": true,
+  "scripts": {
+    "start": "pnpm -r start",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-native-worklets": "npm:react-native-worklets-core@^1.6.3"
+    }
+  }
+}

@@ -6,7 +6,7 @@ const commentService = new CommentService();
 export class CommentController {
   async createComment(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
       const { content } = req.body;
 
@@ -26,7 +26,7 @@ export class CommentController {
 
   async getTaskComments(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
 
       const comments = await commentService.getTaskComments(taskId, userId);
@@ -45,7 +45,7 @@ export class CommentController {
 
   async updateComment(req: Request, res: Response) {
     try {
-      const { commentId } = req.params;
+      const { commentId } = req.params as { commentId: string };
       const { content } = req.body;
       const userId = req.user!.userId;
 
@@ -65,7 +65,7 @@ export class CommentController {
 
   async deleteComment(req: Request, res: Response) {
     try {
-      const { commentId } = req.params;
+      const { commentId } = req.params as { commentId: string };
       const userId = req.user!.userId;
 
       await commentService.deleteComment(commentId, userId);

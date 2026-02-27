@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -16,13 +16,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
-import { useAuth } from '@/app/providers/AuthProvider';
+import { useAuth } from "@/app/providers/AuthProvider";
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -45,10 +45,10 @@ export function LoginPage() {
     try {
       await login(data.email, data.password);
       // Navigation is handled by simple redirect logic or effect, but here we explicitly navigate
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || 'Login failed');
+      toast.error(error.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +73,7 @@ export function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
-                {...register('email')}
+                {...register("email")}
                 disabled={isLoading}
               />
               {errors.email && (
@@ -87,7 +87,7 @@ export function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                {...register('password')}
+                {...register("password")}
                 disabled={isLoading}
               />
               {errors.password && (
@@ -103,13 +103,13 @@ export function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-           <div className="text-sm text-muted-foreground text-center">
-                Demo Credentials: <br/>
-                admin@example.com / password
-           </div>
+          <div className="text-sm text-muted-foreground text-center">
+            Demo Credentials: <br />
+            admin@example.com / password
+          </div>
         </CardFooter>
       </Card>
-      
+
       {/* Background decoration */}
       <div className="fixed inset-0 -z-10 h-full w-full bg-background [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30 dark:opacity-20"></div>
     </div>

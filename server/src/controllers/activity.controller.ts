@@ -8,7 +8,7 @@ export class ActivityController {
 
     async getTaskActivity(req: Request, res: Response) {
         try {
-            const { taskId } = req.params;
+            const { taskId } = req.params as { taskId: string };
 
             if (!taskId) {
                 return res.status(400).json({ success: false, error: "Task ID is required" });

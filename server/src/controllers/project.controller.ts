@@ -24,7 +24,7 @@ export class ProjectController {
 
   async getWorkspaceProjects(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const userId = req.user!.userId;
 
       const projects = await projectService.getWorkspaceProjects(
@@ -46,7 +46,7 @@ export class ProjectController {
 
   async getProjectById(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
 
       const project = await projectService.getProjectById(projectId, userId);
@@ -65,7 +65,7 @@ export class ProjectController {
 
   async updateProject(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
 
       const project = await projectService.updateProject(
@@ -89,7 +89,7 @@ export class ProjectController {
 
   async deleteProject(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
 
       await projectService.deleteProject(projectId, userId);
@@ -109,7 +109,7 @@ export class ProjectController {
 
   async addMember(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const { userId: targetUserId, role } = req.body;
       const adderId = req.user!.userId;
 
@@ -134,7 +134,7 @@ export class ProjectController {
 
   async updateMemberRole(req: Request, res: Response) {
     try {
-      const { projectId, userId: targetUserId } = req.params;
+      const { projectId, userId: targetUserId } = req.params as { projectId: string; userId: string };
       const { role } = req.body;
       const updaterId = req.user!.userId;
 
@@ -159,7 +159,7 @@ export class ProjectController {
 
   async removeMember(req: Request, res: Response) {
     try {
-      const { projectId, userId: targetUserId } = req.params;
+      const { projectId, userId: targetUserId } = req.params as { projectId: string; userId: string };
       const removerId = req.user!.userId;
 
       await projectService.removeProjectMember(
@@ -183,7 +183,7 @@ export class ProjectController {
 
   async getMembers(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
 
       const members = await projectService.getProjectMembers(projectId, userId);

@@ -40,7 +40,7 @@ export class WorkspaceController {
 
   async getWorkspaceById(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const userId = req.user!.userId;
 
       const workspace = await workspaceService.getWorkspaceById(workspaceId, userId);
@@ -59,7 +59,7 @@ export class WorkspaceController {
 
   async updateWorkspace(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const userId = req.user!.userId;
 
       const workspace = await workspaceService.updateWorkspace(workspaceId, req.body, userId);
@@ -78,7 +78,7 @@ export class WorkspaceController {
 
   async deleteWorkspace(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const userId = req.user!.userId;
 
       await workspaceService.deleteWorkspace(workspaceId, userId);
@@ -97,7 +97,7 @@ export class WorkspaceController {
 
   async addMember(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const { userId: targetUserId, role } = req.body;
       const inviterId = req.user!.userId;
 
@@ -117,7 +117,7 @@ export class WorkspaceController {
 
   async inviteMember(req: Request, res: Response) {
       try {
-          const { workspaceId } = req.params;
+          const { workspaceId } = req.params as { workspaceId: string };
           const { email, role } = req.body;
           const inviterId = req.user!.userId;
 
@@ -142,7 +142,7 @@ export class WorkspaceController {
 
   async updateMemberRole(req: Request, res: Response) {
     try {
-      const { workspaceId, userId: targetUserId } = req.params;
+      const { workspaceId, userId: targetUserId } = req.params as { workspaceId: string; userId: string };
       const { role } = req.body;
       const updaterId = req.user!.userId;
 
@@ -162,7 +162,7 @@ export class WorkspaceController {
 
   async removeMember(req: Request, res: Response) {
     try {
-      const { workspaceId, userId: targetUserId } = req.params;
+      const { workspaceId, userId: targetUserId } = req.params as { workspaceId: string; userId: string };
       const removerId = req.user!.userId;
 
       await workspaceService.removeMember(workspaceId, targetUserId, removerId);
@@ -181,7 +181,7 @@ export class WorkspaceController {
 
   async getMembers(req: Request, res: Response) {
     try {
-      const { workspaceId } = req.params;
+      const { workspaceId } = req.params as { workspaceId: string };
       const userId = req.user!.userId;
 
       const members = await workspaceService.getWorkspaceMembers(workspaceId, userId);

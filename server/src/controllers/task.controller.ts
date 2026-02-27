@@ -10,7 +10,7 @@ export class TaskController {
   async createTask(req: Request, res: Response) {
     try {
       const userId = req.user!.userId;
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
 
       const task = await taskService.createTask(
         { ...req.body, projectId, reporterId: userId },
@@ -35,7 +35,7 @@ export class TaskController {
   // ============================================
   async getProjectTasks(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
       const { status, priority, assigneeId } = req.query;
 
@@ -62,7 +62,7 @@ export class TaskController {
   // ============================================
   async getTaskById(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
 
       const details = await taskService.getTaskWithDetails(taskId, userId);
@@ -125,7 +125,7 @@ export class TaskController {
   // ============================================
   async updateTask(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
 
       const task = await taskService.updateTask(taskId, req.body, userId);
@@ -154,7 +154,7 @@ export class TaskController {
   // ============================================
   async deleteTask(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
 
       await taskService.deleteTask(taskId, userId);
@@ -232,7 +232,7 @@ export class TaskController {
   // ============================================
   async getProjectStats(req: Request, res: Response) {
     try {
-      const { projectId } = req.params;
+      const { projectId } = req.params as { projectId: string };
       const userId = req.user!.userId;
 
       const stats = await taskService.getProjectTaskStats(projectId, userId);
@@ -254,7 +254,7 @@ export class TaskController {
   // ============================================
   async assignTask(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const { assigneeId } = req.body;
       const userId = req.user!.userId;
 
@@ -278,7 +278,7 @@ export class TaskController {
   // ============================================
   async getTaskDetails(req: Request, res: Response) {
     try {
-      const { taskId } = req.params;
+      const { taskId } = req.params as { taskId: string };
       const userId = req.user!.userId;
 
       const taskDetails = await taskService.getTaskWithDetails(taskId, userId);

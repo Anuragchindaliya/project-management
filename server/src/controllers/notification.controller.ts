@@ -36,7 +36,7 @@ export class NotificationController {
 
     async markAsRead(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const { id } = req.params as { id: string };
             // @ts-ignore
             const userId = req.user?.id || req.user?.userId;
 

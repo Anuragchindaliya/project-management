@@ -1,0 +1,91 @@
+/**
+ * Socket.io hook for real-time updates
+ * Listens for events and invalidates TanStack Query cache
+ * Returns the socket instance for custom events
+ */
+
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { io, Socket } from 'socket.io-client';
+
+// Singleton socket instance to avoid multiple connections
+let socket: Socket | null = null;
+
+export function useSocket() {
+  const queryClient = useQueryClient();
+  const [socketInstance, setSocketInstance] = useState<Socket | null>(socket);
+
+  useEffect(() => {
+    if (!socket) {
+        // Fallback to localhost:3000 if not provided
+        const url = 'http://localhost:3000'; 
+        socket = io(url, {
+            withCredentials: true,
+            transports: ['websocket']
+        });
+    }
+    setSocketInstance(socket);
+
+    // Listen for project events
+    socket.on('project:created', () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    });
+
+    socket.on('project:updated', (data: { projectId?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (data.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['project', data.projectId] });
+      }
+    });
+
+    socket.on('project:deleted', () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    });
+
+    // Listen for task events
+    socket.on('task:created', () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    });
+
+    socket.on('task:updated', (data: { taskId?: string; projectId?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      if (data.taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
+      }
+      if (data.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['project', data.projectId] });
+      }
+    });
+
+    socket.on('task:deleted', () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    });
+
+    // Listen for workspace events
+    socket.on('workspace:created', () => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+    });
+
+    socket.on('workspace:updated', (data: { workspaceId?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      if (data.workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspace', data.workspaceId] });
+      }
+    });
+
+    socket.on('workspace:deleted', () => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+    });
+
+    // Cleanup on unmount? 
+    // Usually we want to keep socket open, but maybe remove listeners?
+    // For now, let's keep it simple.
+    
+    return () => {
+      // socket?.disconnect(); 
+      // We don't disconnect singleton usually unless app unmounts
+    };
+  }, [queryClient]);
+
+  return { socket: socketInstance };
+}
