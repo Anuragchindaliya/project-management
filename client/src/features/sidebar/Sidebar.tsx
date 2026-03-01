@@ -12,7 +12,8 @@ import {
   Search,
   Briefcase,
   MoreHorizontal,
-  Plus
+  Plus,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import { CreateProjectDialog } from "@/features/create/CreateProjectDialog";
 import { InviteMemberDialog } from "@/features/workspace/InviteMemberDialog";
 import { CreateWorkspaceDialog } from "@/features/create/CreateWorkspaceDialog"; 
 import { WorkspaceSettingsDialog } from "@/features/workspace/WorkspaceSettingsDialog"; 
+import { usePendingAccessRequests } from "@/entities/access-request/api/useAccessRequests";
 import { useTheme } from "@/features/theme/ThemeProvider";
 import {
     DropdownMenuSub,
@@ -51,7 +53,10 @@ export function Sidebar({ className }: { className?: string }) {
   const { setTheme } = useTheme();
   const { activeWorkspaceId, setActiveWorkspace } = useWorkspaceStore();
   const { data: workspaces = [] } = useUserWorkspaces();
-  const { canCreateProject, canManageMembers } = usePermissions(); // Removed arg
+  const { canCreateProject, canManageMembers } = usePermissions();
+  const { data: allPendingRequests = [] } = usePendingAccessRequests();
+
+  const pendingRequests = allPendingRequests.filter((r: any) => r.request.workspaceId === activeWorkspaceId);
 
   // Local state for UI
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
@@ -245,11 +250,25 @@ export function Sidebar({ className }: { className?: string }) {
                           </Button>
                          
                          <WorkspaceSettingsDialog>
-                            <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground">
+                           <Button variant="ghost" className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground">
                                 <Settings className="mr-2 h-4 w-4" />
                                 Settings
                             </Button>
                          </WorkspaceSettingsDialog>
+
+                         <Button 
+                            variant="ghost" 
+                            className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-foreground relative"
+                            onClick={() => navigate(`/workspaces/${activeWorkspaceId}/access-requests`)}
+                        >
+                            <Shield className="mr-2 h-4 w-4" />
+                            Access Requests
+                            {pendingRequests.length > 0 && (
+                                <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                    {pendingRequests.length}
+                                </span>
+                            )}
+                         </Button>
                     </>
                  )}
             </div>

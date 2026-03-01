@@ -465,9 +465,55 @@ export const notifications = mysqlTable(
   })
 );
 
+// ============================================
+// ACCESS REQUESTS TABLE
+// ============================================
+export const accessRequests = mysqlTable(
+  'access_requests',
+  {
+    id: varchar('id', { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: varchar('user_id', { length: 36 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    projectId: varchar('project_id', { length: 36 })
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    workspaceId: varchar('workspace_id', { length: 36 })
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    requestedRole: varchar('requested_role', { length: 50 }).notNull(),
+    status: mysqlEnum('status', ['pending', 'approved', 'rejected']).default('pending').notNull(),
+    message: text('message'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index('user_idx').on(table.userId),
+    workspaceIdx: index('workspace_idx').on(table.workspaceId),
+    projectIdx: index('project_idx').on(table.projectId),
+    statusIdx: index('status_idx').on(table.status),
+  })
+);
+
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
     fields: [notifications.userId],
     references: [users.id],
+  }),
+}));
+
+export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [accessRequests.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [accessRequests.projectId],
+    references: [projects.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [accessRequests.workspaceId],
+    references: [workspaces.id],
   }),
 }));

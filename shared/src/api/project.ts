@@ -28,8 +28,13 @@ export interface WorkspaceProjectsResponse {
 }
 
 export const projectApi = {
-  getWorkspaceProjects: async (workspaceId: string): Promise<ApiResponse<WorkspaceProjectsResponse>> => {
-    const response = await apiClient.get<ApiResponse<WorkspaceProjectsResponse>>(`/projects/workspace/${workspaceId}`);
+  getWorkspaceProjects: async (workspaceId: string): Promise<ApiResponse<Project[]>> => {
+    const response = await apiClient.get<ApiResponse<Project[]>>(`/projects/workspace/${workspaceId}`);
+    return response.data;
+  },
+
+  getProjectPermissions: async (projectId: string): Promise<ApiResponse<{ permissions: any }>> => {
+    const response = await apiClient.get<ApiResponse<{ permissions: any }>>(`/projects/${projectId}/permissions`);
     return response.data;
   },
 

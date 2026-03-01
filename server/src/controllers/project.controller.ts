@@ -228,4 +228,23 @@ export class ProjectController {
       });
     }
   }
+
+  async getMyPermissions(req: Request, res: Response) {
+    try {
+      const { projectId } = req.params as { projectId: string };
+      const userId = req.user!.userId;
+
+      const permissions = await projectService.getMyPermissions(projectId, userId);
+
+      return res.json({
+        success: true,
+        data: { permissions },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: "Failed to fetch permissions",
+      });
+    }
+  }
 }

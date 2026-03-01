@@ -14,6 +14,7 @@ import { WorkspaceProjectsPage } from './pages/workspaces/WorkspaceProjectsPage'
 import { LandingPage } from './pages/landing/LandingPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { WorkspaceMembersPage } from './pages/workspaces/WorkspaceMembersPage';
+import { WorkspaceAccessRequestsPage } from './pages/workspaces/WorkspaceAccessRequestsPage';
 import { socketService } from '@/shared/api/socket';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -81,6 +82,7 @@ function AppContent() {
         {/* Workspace Routes */}
         <Route path="/workspaces/:workspaceId" element={<WorkspaceProjectsPage />} />
         <Route path="/workspaces/:workspaceId/members" element={<WorkspaceMembersPage />} />
+        <Route path="/workspaces/:workspaceId/access-requests" element={<WorkspaceAccessRequestsPage />} />
         
         {/* Global/All Projects and Tasks */}
         <Route path="/projects" element={<ProjectsPage />} />

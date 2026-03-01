@@ -19,7 +19,10 @@ import { TaskDetailSheet } from "@/features/tasks/TaskDetailSheet";
 import { useTaskSocketEvents } from "@/shared/hooks/useTaskSocket";
 import { CreateTaskDialog } from "@/features/create/CreateTaskDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, Lock } from "lucide-react";
+import { useProjectPermissions } from "@/entities/project/api/useProjectPermissions";
+import { RequestAccessDialog } from "@/features/access/RequestAccessDialog";
+import { useWorkspaceStore } from "@/shared/stores/useWorkspaceStore";
 
 const defaultCols = [
   { id: "todo", title: "To Do" },
@@ -30,10 +33,12 @@ const defaultCols = [
 
 export function KanbanBoard() {
   const { projectId } = useParams();
+  const { activeWorkspaceId } = useWorkspaceStore();
   const [columns] = useState(defaultCols);
   
   const { data: tasks = [] } = useProjectTasks(projectId || "");
-  console.log({tasks,projectId});
+  const { data: permissions, isLoading: permissionsLoading } = useProjectPermissions(projectId);
+  console.log("🚀 ~ KanbanBoard ~ permissions:", permissions)
   const { mutate: updateTask } = useUpdateTask(projectId || "");
   
   useTaskSocketEvents(projectId); // Real-time sync
@@ -41,6 +46,9 @@ export function KanbanBoard() {
   const [activeColumn, setActiveColumn] = useState<any | null>(null);
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+
+  const canManageTasks = permissions?.canManageTasks ?? false;
 
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -53,6 +61,8 @@ export function KanbanBoard() {
   );
 
   function onDragStart(event: DragStartEvent) {
+    if (!canManageTasks) return; // Prevent dragging start
+
     if (event.active.data.current?.type === "Column") {
       setActiveColumn(event.active.data.current.column);
       return;
@@ -111,18 +121,31 @@ export function KanbanBoard() {
         {/* Kanban Toolbar */}
         <div className="flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-                 {/* Filters could go here */}
                  <Button variant="outline" size="sm" className="h-8 gap-2">
                     <Filter className="h-3.5 w-3.5" />
                     Filter
                  </Button>
+                 {!canManageTasks && !permissionsLoading && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 gap-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+                      onClick={() => setIsRequestDialogOpen(true)}
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      Request Edit Access
+                    </Button>
+                 )}
             </div>
-            <CreateTaskDialog projectId={projectId}>
-                <Button size="sm" className="h-8 gap-2">
-                    <Plus className="h-3.5 w-3.5" />
-                    Task
-                </Button>
-            </CreateTaskDialog>
+            
+            {canManageTasks && (
+              <CreateTaskDialog projectId={projectId}>
+                  <Button size="sm" className="h-8 gap-2">
+                      <Plus className="h-3.5 w-3.5" />
+                      Task
+                  </Button>
+              </CreateTaskDialog>
+            )}
         </div>
 
         <div className="flex flex-1 w-full overflow-x-auto overflow-y-hidden px-4 pb-4">
@@ -140,6 +163,7 @@ export function KanbanBoard() {
                         column={col}
                         tasks={mappedTasks.filter((task) => task.columnId === col.id)}
                         onTaskClick={setSelectedTaskId}
+                        isDraggable={canManageTasks}
                     />
                 ))}
                 </SortableContext>
@@ -155,7 +179,7 @@ export function KanbanBoard() {
                     )}
                   />
                 )}
-                {activeTask && <KanbanCard task={activeTask} />}
+                {activeTask && <KanbanCard task={activeTask} isDraggable={canManageTasks} />}
               </DragOverlay>,
               document.body
             )}
@@ -166,6 +190,13 @@ export function KanbanBoard() {
                 onClose={() => setSelectedTaskId(null)} 
             />
         </div>
+
+        <RequestAccessDialog
+          projectId={projectId!}
+          workspaceId={activeWorkspaceId!}
+          isOpen={isRequestDialogOpen}
+          onClose={() => setIsRequestDialogOpen(false)}
+        />
     </div>
   );
 }

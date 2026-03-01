@@ -2,6 +2,7 @@ export * from './api/auth';
 export * from './api/workspace';
 export * from './api/project';
 export * from './api/task';
+export * from './api/access-request';
 
 export * from './api/client';
 export * from './api/dashboard';

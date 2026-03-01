@@ -16,9 +16,10 @@ interface Props {
   column: Column;
   tasks: Task[];
   onTaskClick?: (taskId: string) => void;
+  isDraggable?: boolean;
 }
 
-export function KanbanColumn({ column, tasks, onTaskClick }: Props) {
+export function KanbanColumn({ column, tasks, onTaskClick, isDraggable = true }: Props) {
     const { projectId } = useParams();
   
   const tasksIds = useMemo(() => {
@@ -54,7 +55,12 @@ export function KanbanColumn({ column, tasks, onTaskClick }: Props) {
       <div className="flex flex-grow flex-col gap-3 p-3 overflow-y-auto overflow-x-hidden">
         <SortableContext items={tasksIds}>
           {tasks.map((task) => (
-            <KanbanCard key={task.id} task={task} onClick={() => onTaskClick?.(task.id)} />
+            <KanbanCard 
+              key={task.id} 
+              task={task} 
+              onClick={() => onTaskClick?.(task.id)} 
+              isDraggable={isDraggable}
+            />
           ))}
         </SortableContext>
         

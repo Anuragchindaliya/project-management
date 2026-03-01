@@ -65,6 +65,11 @@ router.get(
   taskController.getProjectTasks
 );
 
+router.get(
+  '/:projectId/permissions',
+  projectController.getMyPermissions
+);
+
 router.patch(
   '/:projectId',
   requireProjectPermission('canEditProject'),

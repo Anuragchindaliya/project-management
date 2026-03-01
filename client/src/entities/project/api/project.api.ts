@@ -48,6 +48,14 @@ export const projectApi = {
     return response.data.data.project;
   },
 
+  getProjectPermissions: async (projectId: string): Promise<any> => {
+    const response = await apiClient.get<ApiResponse<{ permissions: any }>>(`/projects/${projectId}/permissions`);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.error || 'Failed to fetch permissions');
+    }
+    return response.data.data.permissions;
+  },
+
   /**
    * Create a new project
    */

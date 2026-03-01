@@ -5,9 +5,10 @@ import { Task } from "@/shared/types/drizzle.types";
 interface Props {
   task: Task;
   onClick?: () => void;
+  isDraggable?: boolean;
 }
 
-export function KanbanCard({ task, onClick }: Props) {
+export function KanbanCard({ task, onClick, isDraggable = true }: Props) {
   const {
     setNodeRef,
     attributes,
@@ -17,6 +18,7 @@ export function KanbanCard({ task, onClick }: Props) {
     isDragging,
   } = useSortable({
     id: task.id,
+    disabled: !isDraggable,
     data: {
       type: "Task",
       task,
@@ -42,10 +44,10 @@ export function KanbanCard({ task, onClick }: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(isDraggable ? attributes : {})}
+      {...(isDraggable ? listeners : {})}
       onClick={onClick}
-      className="bg-card p-3 rounded-lg border shadow-sm cursor-grab hover:ring-2 hover:ring-primary/50 group"
+      className={`bg-card p-3 rounded-lg border shadow-sm hover:ring-2 hover:ring-primary/50 group ${isDraggable ? 'cursor-grab' : 'cursor-pointer'}`}
     >
       <div className="flex flex-col gap-2">
         <span className="font-medium text-sm line-clamp-2">{task.title}</span>

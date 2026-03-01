@@ -118,6 +118,13 @@ export class ProjectService {
   }
 
   // ============================================
+  // GET MY PERMISSIONS
+  // ============================================
+  async getMyPermissions(projectId: string, userId: string) {
+    return await rbacService.getAllProjectPermissions(projectId, userId);
+  }
+
+  // ============================================
   // UPDATE PROJECT
   // ============================================
   async updateProject(

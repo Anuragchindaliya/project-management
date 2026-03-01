@@ -195,11 +195,14 @@ export class RBACService {
 
     // If not a project member, check workspace-level permissions
     const [project] = await db
-      .select({ workspaceId: projects.workspaceId })
+      .select({ workspaceId: projects.workspaceId, ownerId: projects.ownerId })
       .from(projects)
       .where(eq(projects.id, projectId));
 
     if (!project) return false;
+
+    // Project owner always has permissions
+    if (project.ownerId === userId) return true;
 
     const workspaceRole = await this.getUserWorkspaceRole(
       project.workspaceId,
@@ -216,5 +219,74 @@ export class RBACService {
     }
 
     return false;
+  }
+
+  async getAllProjectPermissions(
+    projectId: string,
+    userId: string
+  ): Promise<ProjectPermissions> {
+    const projectRole = await this.getUserProjectRole(projectId, userId);
+    let permissions: ProjectPermissions;
+
+    if (projectRole) {
+      permissions = this.getProjectPermissions(projectRole);
+    } else {
+      // Default permissions for non-members
+      permissions = {
+        canManageTasks: false,
+        canCreateTasks: false,
+        canDeleteTasks: false,
+        canAssignTasks: false,
+        canViewProject: false,
+        canEditProject: false,
+      };
+    }
+
+    // Check workspace-level elevation and project ownership
+    const [project] = await db
+      .select({ workspaceId: projects.workspaceId, ownerId: projects.ownerId })
+      .from(projects)
+      .where(eq(projects.id, projectId));
+
+    if (project) {
+      if (project.ownerId === userId) {
+        return {
+          canManageTasks: true,
+          canCreateTasks: true,
+          canDeleteTasks: true,
+          canAssignTasks: true,
+          canViewProject: true,
+          canEditProject: true,
+        };
+      }
+
+      const workspaceRole = await this.getUserWorkspaceRole(
+        project.workspaceId,
+        userId
+      );
+      
+      if (
+        workspaceRole === WorkspaceRole.OWNER ||
+        workspaceRole === WorkspaceRole.ADMIN
+      ) {
+        // Elevate all project permissions for workspace admins/owners
+        return {
+          canManageTasks: true,
+          canCreateTasks: true,
+          canDeleteTasks: true,
+          canAssignTasks: true,
+          canViewProject: true,
+          canEditProject: true,
+        };
+      }
+
+      // If they are a workspace member but not admin/owner, 
+      // they might still have 'canViewProject' if they are a 'MEMBER' or 'VIEWER'
+      if (workspaceRole) {
+        permissions.canViewProject = true;
+      }
+    }
+
+    return permissions;
   }
 }
